@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    body { background:#0b0f19; }
+    .card-dark { background:#111827; border:1px solid #1e293b; border-top:4px solid #facc15; border-radius:8px; padding:25px; color:#fff; }
+    label { display:block; margin-top:12px; font-weight:bold; color:#facc15; font-size:11px; text-transform:uppercase; }
+    input, textarea { background:#0b0f19 !important; color:#fff !important; border:1px solid #1e293b; width:100%; padding:9px; margin:5px 0 10px; border-radius:4px; font-size:13px; box-sizing:border-box; }
+    input:focus, textarea:focus { border-color:#facc15 !important; outline:none; box-shadow:0 0 8px rgba(250,204,21,0.4); }
+    .btn-simpan { background:#facc15; color:#000; border:none; padding:10px 20px; border-radius:6px; font-weight:bold; cursor:pointer; }
+    .btn-batal { background:#162235; color:#fff; border:1px solid #facc15; padding:10px 20px; border-radius:6px; text-decoration:none; display:inline-block; }
+</style>
+<div class="header-halaman" style="margin-bottom:20px; border-left:4px solid #facc15; padding-left:15px;">
+    <span style="color:#94a3b8; font-size:12px;">Master Data > Pelanggan ></span>
+    <h2 style="color:#fff; margin:5px 0 0 0;">EDIT PELANGGAN - {{ data.id_pelanggan }}</h2>
+</div>
+<div class="card-dark" style="max-width:600px;">
+    <form action="{{ url_for('edit_pelanggan', id=data.id_pelanggan) }}" method="POST">
+        <label>ID Pelanggan</label>
+        <input type="text" value="{{ data.id_pelanggan }}" readonly style="color:#94a3b8 !important;">
+        <label>Nama Pelanggan</label>
+        <input type="text" name="nama" value="{{ data.nama_pelanggan }}" required oninput="this.value=this.value.toUpperCase()">
+        <label>Kode Singkat</label>
+        <input type="text" name="kode" value="{{ data.kode_singkat }}" maxlength="10" required oninput="this.value=this.value.toUpperCase()">
+        <label>Telepon</label>
+        <input type="text" name="telepon" value="{{ data.telepon or '' }}">
+        <label>Alamat</label>
+        <textarea name="alamat" rows="3" oninput="this.value=this.value.toUpperCase()">{{ data.alamat or '' }}</textarea>
+        <label>Keterangan</label>
+        <textarea name="keterangan" rows="2" oninput="this.value=this.value.toUpperCase()">{{ data.keterangan or '' }}</textarea>
+        <div style="margin-top:20px; display:flex; gap:10px;">
+            <button type="submit" class="btn-simpan">💾 Update Data</button>
+            <a href="{{ url_for('daftar_pelanggan') }}" class="btn-batal">↩️ Kembali</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

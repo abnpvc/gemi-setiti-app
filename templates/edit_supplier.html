@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <h2>Edit Data Supplier</h2>
+    <p style="margin:5px 0 20px; color:#666; font-size:14px;">Ubah informasi supplier sesuai kebutuhan</p>
+
+    <form action="{{ url_for('edit_supplier', id=data.id_supplier) }}" method="POST">
+        <label>ID Supplier</label>
+        <input type="text" value="{{ data.id_supplier }}" readonly style="background:#f5f5f5;">
+
+        <label>Nama Supplier</label>
+        <input type="text" name="nama" value="{{ data.nama_supplier }}" required oninput="this.value = this.value.toUpperCase()">
+
+        <label>Kode Singkat</label>
+        <input type="text" name="kode" maxlength="10" value="{{ data.kode_singkat }}" required oninput="this.value = this.value.toUpperCase()">
+
+        <label>Nomor Telepon</label>
+        <input type="text" name="telepon" value="{{ data.telepon or '' }}">
+
+        <label>Alamat</label>
+        <textarea name="alamat" rows="2" oninput="this.value = this.value.toUpperCase()">{{ data.alamat or '' }}</textarea>
+
+        <button type="submit">Perbarui Data</button>
+        <a href="{{ url_for('daftar_supplier') }}" style="margin-left:10px; display:inline-block; padding:8px 18px; background:#6c757d; color:white; border-radius:3px; text-decoration:none;">Kembali</a>
+    </form>
+</div>
+{% endblock %}

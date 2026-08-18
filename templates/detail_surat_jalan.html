@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .detail-card { background:#0b0f19; border:1px solid #1e293b; border-top:4px solid #22c55e; border-radius:8px; padding:25px; color:#fff; }
+    .detail-header { display:flex; justify-content:space-between; flex-wrap:wrap; gap:15px; border-bottom:2px solid #1e293b; padding-bottom:15px; margin-bottom:20px; }
+    .badge { padding:3px 8px; border-radius:4px; font-size:11px; font-weight:bold; border:1px solid; }
+    .badge-DRAFT { background:rgba(148,163,184,0.1); color:#94a3b8; border-color:#94a3b8; }
+    .badge-DALAM\ PERJALANAN { background:rgba(96,165,250,0.1); color:#60a5fa; border-color:#60a5fa; }
+    .badge-TERKIRIM { background:rgba(34,197,94,0.15); color:#22c55e; border-color:#22c55e; }
+    .badge-BATAL { background:rgba(248,113,113,0.1); color:#f87171; border-color:#f87171; }
+    table { width:100%; border-collapse:collapse; font-size:12px; color:#fff; }
+    th { background:#162235; padding:10px; border:1px solid #1e293b; text-transform:uppercase; font-size:11px; }
+    td { padding:10px; border:1px solid #1e293b; background:#111827; text-align:center; }
+    .btn { padding:8px 14px; border-radius:4px; font-size:12px; font-weight:bold; cursor:pointer; border:1px solid; text-decoration:none; display:inline-block; }
+
+    /* FIX CETAK - SEMBUNYIKAN SIDEBAR SAAT PRINT */
+    @media print {
+        .sidebar, .menu-group, .submenu, .header-halaman, 
+        .no-print, .breadcrumb, #wadahNotifikasiSatuLapis {
+            display: none !important;
+        }
+        body { background:#fff !important; margin:0 !important; padding:0 !important; }
+        .main { margin-left:0 !important; padding:0 !important; width:100% !important; background:#fff !important; }
+        .detail-card { 
+            border:none !important; 
+            border-radius:0 !important; 
+            padding:0 !important; 
+            background:#fff !important; 
+            color:#000 !important; 
+            box-shadow:none !important;
+        }
+        .detail-header, .detail-card > div, table, th, td {
+            color:#000 !important;
+            background:#fff !important;
+        }
+        th { background:#f2f2f2 !important; border:1px solid #000 !important; }
+        td { border:1px solid #000 !important; }
+        .badge { border:1px solid #000 !important; background:#fff !important; color:#000 !important; }
+        /* Hilangkan ruler 0mm yang muncul di screenshot */
+        @page { margin: 10mm; size: A4; }
+    }
+</style>
+
+<div class="detail-card" id="areaCetakSJ">
+    <!-- BAGIAN YANG AKAN DI CETAK SAJA -->
+    <div id="kopSuratPrint" style="display:none;">
+        <div style="text-align:center; border-bottom:3px solid #000; padding-bottom:10px; margin-bottom:15px;">
+            <h2 style="margin:0; font-size:20px; letter-spacing:2px;">GEMI SETITI</h2>
+            <small style="font-size:10px; letter-spacing:4px;">TEKATI • TEKUNI • TELATENI</small>
+            <h3 style="margin:8px 0 0 0; font-size:14px; text-decoration:underline;">SURAT JALAN</h3>
+        </div>
+    </div>
+
+    <div class="detail-header">
+        <div>
+            <span class="no-print" style="color:#94a3b8; font-size:11px; text-transform:uppercase;">Surat Jalan &gt; Detail</span>
+            <h1 style="margin:5px 0; color:#22c55e; font-size:22px;" class="print-black">{{ kirim.no_pengiriman }} <span class="badge badge-{{ kirim.status_kirim }}">{{ kirim.status_kirim }}</span></h1>
+            <p style="margin:0; color:#64748b; font-size:12px;" class="print-black">Tgl Kirim: {{ kirim.tanggal_kirim.strftime('%d-%m-%Y') }} | Pelanggan: {{ kirim.pelanggan.nama_pelanggan if kirim.pelanggan else kirim.id_pelanggan }} {% if kirim.pesanan %} | Dari Pesanan: <b style="color:#ff7800;">{{ kirim.pesanan.no_pesanan }}</b>{% endif %}</p>
+        </div>
+        <div class="no-print" style="display:flex; gap:8px; align-items:flex-start;">
+            <a href="{{ url_for('transaksi_pengiriman') }}" class="btn" style="background:#162235; color:#94a3b8; border-color:#94a3b8;">← KEMBALI</a>
+            <button onclick="cetakSJBersih()" class="btn" style="background:#22c55e; color:#000; border-color:#22c55e; font-weight:900;">🖨️ CETAK SJ BERSIH</button>
+            <button onclick="window.print()" class="btn" style="background:#0f172a; color:#fff; border-color:#fff;">🖨️ CETAK DEFAULT</button>
+        </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:15px; margin-bottom:20px; background:#162235; padding:15px; border-radius:6px; border:1px solid #1e293b;" class="info-box">
+        <div><small style="color:#94a3b8;">ALAMAT KIRIM</small><div style="font-weight:bold; color:#fff; font-size:12px;" class="print-black">{{ kirim.alamat_kirim or '-' }}</div></div>
+        <div><small style="color:#94a3b8;">SOPIR</small><div style="font-weight:bold;" class="print-black">{{ kirim.sopir or '-' }}</div></div>
+        <div><small style="color:#94a3b8;">NO POLISI</small><div style="font-weight:bold;" class="print-black">{{ kirim.no_polisi or '-' }}</div></div>
+        <div><small style="color:#94a3b8;">EKSPEDISI</small><div style="font-weight:bold;" class="print-black">{{ kirim.ekspedisi or '-' }}</div></div>
+        <div><small style="color:#94a3b8;">KETERANGAN</small><div style="font-weight:bold;" class="print-black">{{ kirim.keterangan or '-' }}</div></div>
+    </div>
+
+    <h3 style="color:#22c55e; font-size:13px; margin-bottom:10px;" class="print-black">📦 ITEM YANG DIKIRIM ({{ kirim.items_kirim|length }})</h3>
+    <div style="overflow-x:auto;">
+        <table id="tabelSJ">
+            <thead><tr><th>Barang Jadi</th><th>Nama Barang</th><th>Panjang</th><th>Qty Kirim</th><th>Ket</th></tr></thead>
+            <tbody>
+                {% for det in kirim.items_kirim %}
+                <tr>
+                    <td style="font-weight:bold; color:#facc15;" class="print-black">{{ det.id_barang_jadi }}</td>
+                    <td style="text-align:left;" class="print-black">{{ det.barang_jadi.nama_barang if det.barang_jadi else '-' }}</td>
+                    <td class="print-black">{{ det.panjang_produk }} M</td>
+                    <td style="font-weight:bold; color:#22c55e;" class="print-black">{{ det.jumlah_kirim }}</td>
+                    <td class="print-black">{{ det.keterangan_item or '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- TANDA TANGAN KHUSUS CETAK -->
+    <div id="footerTTD" style="display:none; margin-top:30px;">
+        <div style="display:flex; justify-content:space-between; text-align:center; font-size:11px; color:#000;">
+            <div style="width:30%;">Hormat Kami,<br><br><br><br><b>Gemi Setiti</b></div>
+            <div style="width:30%;">Sopir,<br><br><br><br><b>{{ kirim.sopir or '............' }}</b></div>
+            <div style="width:30%;">Penerima,<br><br><br><br><b>{{ kirim.pelanggan.nama_pelanggan if kirim.pelanggan else '' }}</b></div>
+        </div>
+    </div>
+
+    <div class="no-print" style="margin-top:20px; background:#111827; border:1px solid #1e293b; padding:15px; border-radius:6px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <span style="color:#fff; font-size:12px; font-weight:bold;">UBAH STATUS:</span>
+        <form action="{{ url_for('update_status_pengiriman', id_pengiriman=kirim.id_pengiriman) }}" method="POST" style="display:flex; gap:8px; align-items:center;">
+            <select name="status_kirim" style="background:#0b0f19; color:#fff; border:1px solid #1e293b; padding:6px 10px; border-radius:4px; font-size:12px;">
+                <option value="DRAFT" {% if kirim.status_kirim=='DRAFT' %}selected{% endif %}>DRAFT</option>
+                <option value="DALAM PERJALANAN" {% if kirim.status_kirim=='DALAM PERJALANAN' %}selected{% endif %}>DALAM PERJALANAN</option>
+                <option value="TERKIRIM" {% if kirim.status_kirim=='TERKIRIM' %}selected{% endif %}>TERKIRIM (POTONG STOK)</option>
+                <option value="BATAL" {% if kirim.status_kirim=='BATAL' %}selected{% endif %}>BATAL (KEMBALIKAN STOK)</option>
+            </select>
+            <button type="submit" class="btn" style="background:#22c55e; color:#000; border-color:#22c55e;">💾 UPDATE STATUS</button>
+        </form>
+        <form action="{{ url_for('hapus_pengiriman_pelanggan', id_pengiriman=kirim.id_pengiriman) }}" method="POST" onsubmit="return confirm('Hapus Surat Jalan ini? Stok akan dikembalikan jika sudah TERKIRIM.')" style="margin-left:auto;">
+            <button type="submit" class="btn" style="background:#7f1d1d; color:#f87171; border-color:#f87171;">🗑️ HAPUS SJ</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function cetakSJBersih(){
+    const area = document.getElementById("areaCetakSJ");
+    const kop = document.getElementById("kopSuratPrint").innerHTML;
+    const ttd = document.getElementById("footerTTD").innerHTML;
+    // Ambil isi tanpa tombol no-print
+    const clone = area.cloneNode(true);
+    // Hapus semua elemen no-print di clone
+    clone.querySelectorAll('.no-print').forEach(el=>el.remove());
+    // Ubah warna jadi hitam putih untuk print
+    clone.querySelectorAll('.print-black').forEach(el=>{
+        el.style.color = '#000';
+    });
+
+    const win = window.open('', '_blank', 'width=900,height=700');
+    win.document.write(`
+    <html>
+    <head>
+        <title>Surat Jalan ${'{{ kirim.no_pengiriman }}'}</title>
+        <style>
+            @page { margin: 12mm; size: A4; }
+            body { font-family: Arial, sans-serif; padding:15px; color:#000; background:#fff; font-size:12px; }
+            table { width:100%; border-collapse:collapse; margin-top:10px; }
+            th, td { border:1px solid #000; padding:8px; text-align:center; font-size:11px; }
+            th { background:#f2f2f2; font-weight:bold; text-transform:uppercase; }
+            td { background:#fff; }
+            h1 { font-size:18px; margin:0; }
+            h3 { font-size:13px; }
+            .badge { border:1px solid #000; padding:2px 6px; border-radius:4px; font-size:10px; }
+            .grid-info { display:grid; grid-template-columns: 1fr 1fr; gap:12px; border:1px solid #000; padding:10px; margin:15px 0; }
+            .grid-info small { font-size:9px; color:#555; text-transform:uppercase; display:block; }
+            .grid-info div { font-weight:bold; font-size:11px; }
+        </style>
+    </head>
+    <body>
+        ${kop}
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:11px;">
+            <div>
+                <b>No SJ:</b> {{ kirim.no_pengiriman }}<br>
+                <b>Tgl:</b> {{ kirim.tanggal_kirim.strftime('%d-%m-%Y') }}<br>
+                <b>PO:</b> {{ kirim.pesanan.no_pesanan if kirim.pesanan else '-' }}
+            </div>
+            <div style="text-align:right;">
+                <b>Pelanggan:</b> {{ kirim.pelanggan.nama_pelanggan if kirim.pelanggan else '' }}<br>
+                <b>Kode:</b> {{ kirim.pelanggan.kode_singkat if kirim.pelanggan else '' }}<br>
+                <b>Status:</b> {{ kirim.status_kirim }}
+            </div>
+        </div>
+        <div class="grid-info">
+            <div><small>Alamat Kirim</small><div>{{ kirim.alamat_kirim or '-' }}</div></div>
+            <div><small>Sopir / Nopol</small><div>{{ kirim.sopir or '-' }} / {{ kirim.no_polisi or '-' }}</div></div>
+            <div><small>Ekspedisi</small><div>{{ kirim.ekspedisi or '-' }}</div></div>
+            <div><small>Keterangan</small><div>{{ kirim.keterangan or '-' }}</div></div>
+        </div>
+        <h3>ITEM YANG DIKIRIM ({{ kirim.items_kirim|length }})</h3>
+        ${clone.querySelector('table').outerHTML}
+        ${ttd}
+        <script>window.onload = function(){ window.print(); setTimeout(()=>window.close(), 500); }<\/script>
+    </body>
+    </html>
+    `);
+    win.document.close();
+}
+</script>
+{% endblock %}

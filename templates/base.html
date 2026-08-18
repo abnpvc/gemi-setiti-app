@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemi Setiti - Sistem Inventaris Manufaktur PVC</title>
+    <style>
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0b0f19; color: #ffffff; display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: #0f172a; border-right: 1px solid #1e293b; padding: 20px 10px; box-sizing: border-box; flex-shrink: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+        .sidebar h3 { color: #ff7800; text-align: center; margin-bottom: 25px; font-size: 16px; letter-spacing: 1px; text-transform: uppercase; font-weight: 900; border-bottom: 2px solid #ff7800; padding-bottom: 10px; }
+        .menu-group { padding: 10px 15px; color: #94a3b8; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; text-transform: uppercase; border-radius: 4px; transition: all 0.2s; margin-top: 5px; }
+        .menu-group:hover { background: #1e293b; color: #ffffff; }
+        .submenu { display: none; padding-left: 10px; margin-top: 2px; }
+        .submenu.open { display: block; }
+        .sidebar a { display: block; padding: 8px 15px; color: #cbd5e1; text-decoration: none; font-size: 13px; border-radius: 4px; transition: all 0.2s; margin-bottom: 2px; }
+        .sidebar a:hover { background: #162235; color: #ff7800; padding-left: 20px; }
+        .sidebar a.active { background: #ff7800 !important; color: #000000 !important; font-weight: bold; }
+        .main { flex-grow: 1; padding: 25px; box-sizing: border-box; background: #0b0f19; overflow-y: auto; }
+        .pesan { padding: 12px 15px; margin-bottom: 20px; border-radius: 6px; font-size: 13px; font-weight: bold; }
+        .pesan.success { background: rgba(52, 211, 153, 0.1); border: 1px solid #34d399; color: #34d399; }
+        .pesan.danger { background: rgba(248, 113, 113, 0.1); border: 1px solid #f87171; color: #f87171; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0b0f19; }
+        ::-webkit-scrollbar-thumb { background: #ff7800; border-radius: 3px; }
+        .alert-success, .alert-danger, .alert { position: fixed !important; top: 20px !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 100000 !important; width: 500px !important; max-width: 90% !important; box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important; border-radius: 6px !important; margin: 0 !important; animation: meluncurTurun 0.3s ease-out !important; }
+        @keyframes meluncurTurun { from { top: -50px; opacity: 0; } to { top: 20px; opacity: 1; } }
+        .main { padding: 15px 20px !important; }
+        .card { padding-bottom: 10px !important; }
+        div[style*="overflow-x: auto"] { max-height: 78vh !important; overflow-y: auto !important; overflow-x: auto !important; border-radius: 8px !important; }
+        .tabel-rekap-utama th, .tabel-rekap-utama td, table.tabel-rekap-utama th, table.tabel-rekap-utama td { padding: 12px 10px !important; font-size: 12px !important; line-height: 1.5 !important; }
+        .tabel-rekap-utama tr { height: 48px !important; }
+        .tabel-rekap-utama thead th { position: sticky !important; top: 0 !important; z-index: 5 !important; background: #162235 !important; border-bottom: 2px solid #ff7800 !important; }
+        input[placeholder*="Cari nama"] { height: 36px !important; font-size: 12px !important; }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <a href="{{ url_for('dashboard') }}" style="padding: 0; margin: 0; background: none; text-decoration: none; display: block; text-align: center; margin-bottom: 25px; border-bottom: 1px solid #1e293b; padding-bottom: 15px;">
+        <h3 style="margin: 0; padding: 0; border: none; font-size: 20px; font-weight: 300; letter-spacing: 4px; text-transform: uppercase; color: #ffffff; font-family: 'Segoe UI Light', 'Arial', sans-serif;">
+            <span style="color: #facc15; font-weight: 900;">G</span>EMI <span style="color: #ff7800; font-weight: 900;">S</span>ETITI
+        </h3>
+        <div style="color: #94a3b8; font-size: 8px; font-weight: 600; letter-spacing: 5px; margin-top: 8px; text-transform: uppercase; font-family: 'Segoe UI', sans-serif;">
+            TEKATI • TEKUNI • TELATENI
+        </div>
+    </a>
+
+    {% set is_master_open = request.endpoint and ('daftar_barang_jadi' in request.endpoint or 'daftar_bahan_baku' in request.endpoint or 'daftar_supplier' in request.endpoint or 'daftar_pelanggan' in request.endpoint) %}
+    <div class="menu-group" onclick="toggleMenu('master')" style="color: #ff7800; cursor: pointer;">
+        📂 Master Data <span id="master-arrow">{{ '▼' if is_master_open else '▶' }}</span>
+    </div>
+    <div class="submenu {{ 'open' if is_master_open else '' }}" id="master">
+        <a href="{{ url_for('daftar_barang_jadi') }}" class="{{ 'active' if request.endpoint == 'daftar_barang_jadi' else '' }}">📦 Barang Jadi</a>
+        <a href="{{ url_for('daftar_bahan_baku') }}" class="{{ 'active' if request.endpoint == 'daftar_bahan_baku' else '' }}">📁 Bahan Baku</a>
+        <a href="{{ url_for('daftar_supplier') }}" class="{{ 'active' if request.endpoint == 'daftar_supplier' else '' }}">📁 Supplier</a>
+        <a href="{{ url_for('daftar_pelanggan') }}" class="{{ 'active' if request.endpoint == 'daftar_pelanggan' else '' }}" style="border:1px solid rgba(250,204,21,0.2);">👥 Pelanggan</a>
+    </div>
+
+    {% set is_transaksi_open = request.endpoint and ('transaksi_kedatangan_bahan' in request.endpoint or 'transaksi_produksi_harian' in request.endpoint or 'transaksi_pesanan_barang_jadi' in request.endpoint or 'detail_pesanan_barang_jadi' in request.endpoint or 'transaksi_pengiriman' in request.endpoint or 'detail_pengiriman_pelanggan' in request.endpoint) %}
+    <div class="menu-group" onclick="toggleMenu('transaksi')" style="color: #ff7800; cursor: pointer; margin-top: 10px;">
+        📂 Transaksi Gudang <span id="transaksi-arrow">{{ '▼' if is_transaksi_open else '▶' }}</span>
+    </div>
+    <div class="submenu {{ 'open' if is_transaksi_open else '' }}" id="transaksi">
+        <a href="{{ url_for('transaksi_kedatangan_bahan') }}" class="{{ 'active' if request.endpoint == 'transaksi_kedatangan_bahan' else '' }}">📥 Kedatangan Bahan</a>
+        <a href="{{ url_for('transaksi_produksi_harian') }}" class="{{ 'active' if request.endpoint == 'transaksi_produksi_harian' else '' }}">🍳 Produksi Harian</a>
+        <a href="{{ url_for('transaksi_pesanan_barang_jadi') }}" class="{{ 'active' if request.endpoint in ['transaksi_pesanan_barang_jadi','detail_pesanan_barang_jadi'] else '' }}" style="border:1px solid rgba(255,120,0,0.3); background: rgba(255,120,0,0.05);">🛒 Pesanan Pelanggan</a>
+        <a href="{{ url_for('transaksi_pengiriman') }}" class="{{ 'active' if request.endpoint in ['transaksi_pengiriman','detail_pengiriman_pelanggan'] else '' }}" style="border:1px solid rgba(34,197,94,0.5); background: rgba(34,197,94,0.12); color:#22c55e; font-weight:900;">🚚 Pengiriman / SJ - Ketik PO</a>
+    </div>
+
+    {% set is_monitoring_open = request.endpoint and request.endpoint in ['kartu_kendali_film', 'monitoring_kartu_stok', 'monitoring_kartu_stok_barang_jadi', 'monitoring_log_barang_jadi', 'monitoring_log_bahan_baku'] %}
+    <div class="menu-group" onclick="toggleMenu('monitoring')" style="color: #ff7800; cursor: pointer; margin-top: 10px;">
+        📊 Monitoring & Audit <span id="monitoring-arrow">{{ '▼' if is_monitoring_open else '▶' }}</span>
+    </div>
+    <div class="submenu {{ 'open' if is_monitoring_open else '' }}" id="monitoring">
+        <a href="{{ url_for('kartu_kendali_film') }}" class="{{ 'active' if request.endpoint == 'kartu_kendali_film' else '' }}">📜 Kartu Kendali Film</a>
+        <a href="{{ url_for('monitoring_kartu_stok') }}" class="{{ 'active' if request.endpoint == 'monitoring_kartu_stok' else '' }}"
+           style="display: flex; align-items: center; gap: 10px; padding: 10px 15px; color: #38bdf8; font-weight: 900; font-size: 13px; text-decoration: none; border-radius: 4px; font-family: Arial, sans-serif;"
+           onmouseover="this.style.background='#162235'; this.style.color='#ff7800';" 
+           onmouseout="this.style.background='transparent'; this.style.color='#cbd5e1';">
+            📈 Kartu Stok Bahan Baku
+        </a>
+        <a href="{{ url_for('monitoring_log_bahan_baku') }}" class="{{ 'active' if request.endpoint == 'monitoring_log_bahan_baku' else '' }}"
+           style="display: flex; align-items: center; gap: 10px; padding: 10px 15px; color: #38bdf8; font-weight: 900; font-size: 12px; text-decoration: none; border-radius: 4px; font-family: Arial, sans-serif; border:1px solid rgba(56,189,248,0.2); margin-top:2px; background: rgba(56,189,248,0.05);"
+           onmouseover="this.style.background='#0c4a6e'; this.style.color='#fff';" 
+           onmouseout="this.style.background='rgba(56,189,248,0.05)'; this.style.color='#38bdf8';">
+            📜 Log Bahan Baku
+        </a>
+        <a href="{{ url_for('monitoring_kartu_stok_barang_jadi') }}" class="{{ 'active' if request.endpoint == 'monitoring_kartu_stok_barang_jadi' else '' }}"
+           style="display: flex; align-items: center; gap: 10px; padding: 10px 15px; color: #cbd5e1; font-weight: 900; font-size: 13px; text-decoration: none; border-radius: 4px; font-family: Arial, sans-serif; border:1px solid rgba(255,120,0,0.15); margin-top:4px;"
+           onmouseover="this.style.background='#162235'; this.style.color='#ff7800';" 
+           onmouseout="this.style.background='transparent'; this.style.color='#cbd5e1';">
+            📦 Kartu Stok Barang Jadi
+        </a>
+        <a href="{{ url_for('monitoring_log_barang_jadi') }}" class="{{ 'active' if request.endpoint == 'monitoring_log_barang_jadi' else '' }}"
+           style="display: flex; align-items: center; gap: 10px; padding: 10px 15px; color: #f87171; font-weight: 900; font-size: 12px; text-decoration: none; border-radius: 4px; font-family: Arial, sans-serif; border:1px solid rgba(248,113,113,0.2); margin-top:4px; background: rgba(248,113,113,0.05);"
+           onmouseover="this.style.background='#7f1d1d'; this.style.color='#fff';" 
+           onmouseout="this.style.background='rgba(248,113,113,0.05)'; this.style.color='#f87171';">
+            📜 Log Barang Jadi
+        </a>
+    </div>
+
+    {% set is_pengaturan_open = 'pengguna' in request.path or 'profil' in request.path %}
+    <div class="menu-group" onclick="toggleMenu('pengaturan')" style="color: #ff7800; cursor: pointer;">
+        📂 Pengaturan <span id="pengaturan-arrow">{{ '▼' if is_pengaturan_open else '▶' }}</span>
+    </div>
+    <div class="submenu {{ 'open' if is_pengaturan_open else '' }}" id="pengaturan">
+        <a href="/pengaturan/pengguna" style="color: #ff7800; font-weight: bold;">👥 Manajemen Pengguna</a>
+        <a href="/pengaturan/profil" style="color: #cbd5e1;">👤 Profil Akun</a>
+    </div>
+</div>
+
+<div class="main">
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div id="wadahNotifikasiSatuLapis" style="position: fixed; top: 25px; left: 55%; transform: translateX(-50%); z-index: 999999; display: flex; flex-direction: column; gap: 10px; width: 450px; max-width: 85%;">
+      {% for category, message in messages %}
+        {% set warna_bg = '#7f1d1d' if category in ['danger', 'error'] else '#064e3b' %}
+        {% set warna_txt = '#f87171' if category in ['danger', 'error'] else '#34d399' %}
+        {% set warna_brd = '#b91c1c' if category in ['danger', 'error'] else '#059669' %}
+        <div style="background: {{ warna_bg }}; color: {{ warna_txt }}; border: 2px solid {{ warna_brd }}; padding: 12px 20px; border-radius: 6px; font-weight: 900; font-size: 13px; font-family: Arial, sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.6); letter-spacing: 0.5px;">
+          {{ '⚠️' if category in ['danger', 'error'] else '🟢' }} {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+    <script>
+      setTimeout(function() {
+        var kotakNotif = document.getElementById("wadahNotifikasiSatuLapis");
+        if (kotakNotif) {
+          kotakNotif.style.transition = "opacity 0.4s ease-out, transform 0.4s ease-out";
+          kotakNotif.style.opacity = "0";
+          kotakNotif.style.transform = "translate(-50%, -20px)";
+          setTimeout(function() { kotakNotif.remove(); }, 400);
+        }
+      }, 3500);
+    </script>
+  {% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+
+<script>
+        function toggleMenu(menuId) {
+        var submenu = document.getElementById(menuId);
+        var arrow = document.getElementById(menuId + "-arrow");
+        if (submenu.classList.contains("open")) {
+            submenu.classList.remove("open");
+            arrow.innerText = "▶";
+        } else {
+            submenu.classList.add("open");
+            arrow.innerText = "▼";
+        }
+    }
+</script>
+</body>
+</html>

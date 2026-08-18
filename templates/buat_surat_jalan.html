@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .form-container { background: #0b0f19; border: 1px solid #1e293b; border-top: 4px solid #22c55e; border-radius: 8px; padding: 25px; margin-bottom: 25px; color: #ffffff; }
+    .form-header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #22c55e; padding-bottom: 12px; margin-bottom: 20px; cursor: pointer; }
+    .form-header-flex h2 { color: #ffffff; margin: 0; font-size: 16px; text-transform: uppercase; }
+    .btn-minimize { background: #162235; color: #22c55e; border: 1px solid #22c55e; border-radius: 4px; padding: 4px 10px; cursor: pointer; font-weight: bold; }
+    .form-container label { display: block; color: #22c55e; font-weight: bold; font-size: 11px; text-transform: uppercase; margin-top: 12px; margin-bottom: 5px; }
+    .form-container input, .form-container select, .form-container textarea { background: #111827 !important; color: #ffffff !important; border: 1px solid #1e293b !important; width: 100%; padding: 8px 12px; border-radius: 4px; font-size: 13px; box-sizing: border-box; }
+    .form-container input:focus, .form-container select:focus, .form-container textarea:focus { border-color: #22c55e !important; box-shadow: 0 0 8px rgba(34,197,94,0.4); outline: none; }
+    .btn-simpan-transaksi { background: #22c55e; color: #000000; border: none; padding: 12px 25px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 13px; text-transform: uppercase; margin-top: 15px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; color: #fff; margin-top: 5px; }
+    th { padding: 10px; border: 1px solid #1e293b; background: #162235; color: #fff; font-weight: bold; text-transform: uppercase; font-size: 11px; }
+    td { padding: 10px; border: 1px solid #1e293b; background: #0b0f19; }
+    .badge { padding:3px 8px; border-radius:4px; font-size:11px; font-weight:bold; border:1px solid; }
+    .badge-DRAFT { background:rgba(148,163,184,0.1); color:#94a3b8; border-color:#94a3b8; }
+    .badge-DIPROSES { background:rgba(250,204,21,0.1); color:#facc15; border-color:#facc15; }
+    .badge-SIAP\ KIRIM { background:rgba(96,165,250,0.1); color:#60a5fa; border-color:#60a5fa; }
+    .badge-DIKIRIM { background:rgba(52,211,153,0.1); color:#34d399; border-color:#34d399; }
+    .badge-SELESAI { background:rgba(34,197,94,0.15); color:#22c55e; border-color:#22c55e; }
+    .badge-BATAL { background:rgba(248,113,113,0.1); color:#f87171; border-color:#f87171; }
+    .badge-DALAM\ PERJALANAN { background:rgba(96,165,250,0.1); color:#60a5fa; border-color:#60a5fa; }
+    .badge-TERKIRIM { background:rgba(34,197,94,0.15); color:#22c55e; border-color:#22c55e; }
+    .smart-search-wrapper { position: relative; width: 100%; }
+    .smart-search-input { background: #111827 !important; color: #ffffff !important; border: 2px solid #22c55e !important; width: 100%; padding: 10px 14px; border-radius: 6px; font-size: 14px; font-weight:bold; box-sizing: border-box; }
+    .smart-search-input.has-value { background: rgba(34,197,94,0.1) !important; border-color: #22c55e !important; color: #22c55e !important; }
+    .smart-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #0f172a; border: 2px solid #22c55e; border-top: none; border-radius: 0 0 8px 8px; max-height: 300px; overflow-y: auto; z-index: 1000; display: none; box-shadow: 0 15px 35px rgba(0,0,0,0.7); }
+    .smart-dropdown.show { display: block; }
+    .smart-option { padding: 12px 14px; cursor: pointer; border-bottom: 1px solid #1e293b; font-size: 13px; color: #cbd5e1; display: flex; flex-direction: column; gap:2px; }
+    .smart-option:hover { background: #162235; }
+    .smart-option b { color: #facc15; }
+    .smart-option small { color: #64748b; font-size: 11px; }
+    .progress-bar { height: 8px; background: #1e293b; border-radius: 4px; overflow: hidden; margin-top: 6px; }
+    .progress-fill { height: 100%; background: #22c55e; transition: width 0.3s; }
+    .item-kirim-row { background: #111827; border: 1px solid #1e293b; border-left: 4px solid #22c55e; border-radius: 6px; padding: 12px; margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .item-kirim-row.selesai { opacity: 0.5; border-left-color: #64748b; }
+    .qty-input { width: 90px !important; text-align: center; font-weight: bold; border: 2px solid #22c55e !important; }
+    .qty-input.over { border-color: #f87171 !important; background: rgba(248,113,113,0.1) !important; }
+</style>
+
+<div class="header-halaman" style="margin-bottom: 25px; border-left: 4px solid #22c55e; padding-left: 15px;">
+    <span class="breadcrumb" style="color: #94a3b8; font-size: 12px; text-transform: uppercase;">Transaksi Gudang &gt;</span>
+    <h1 style="color: #ffffff; margin: 5px 0 0 0; font-size: 24px; font-weight: bold;">PENGIRIMAN - TARIK DARI PO (PARTIAL BISA)</h1>
+    <p style="color: #64748b; margin: 2px 0 0 0; font-size: 13px;">Pilih No PO → Item keluar otomatis → 1 PO bisa dikirim 2-3x | Status Otomatis</p>
+</div>
+
+<div class="form-container" id="kotakFormLengkap">
+    <div class="form-header-flex" onclick="toggleFormLipat()">
+        <h2>🚚 BUAT SURAT JALAN BARU - {{ preview_no }}</h2>
+        <button type="button" class="btn-minimize" id="panahMinimize">▼</button>
+    </div>
+    <div id="isiFormMeliat" style="max-height: 0px; overflow: hidden; transition: max-height 0.5s ease-out;">
+        <div style="padding: 20px; border: 1px solid #1e293b; border-top: none; border-radius: 0 0 6px 6px;">
+            <form action="{{ url_for('tambah_pengiriman_pelanggan') }}" method="POST" id="formKirim">
+                <div style="background:#162235; border:2px solid #22c55e; border-radius:8px; padding:18px; margin-bottom:20px;">
+                    <label style="font-size:14px; color:#22c55e;">🔍 STEP 1: KETIK & PILIH NO PESANAN (PO) *</label>
+                    <div class="smart-search-wrapper" id="wrapperPO">
+                        <input type="text" id="po_search_input" class="smart-search-input" placeholder="Ketik No PO / Nama Pelanggan... ex: PO-202608-0002, SCB CEMARA..." autocomplete="off">
+                        <input type="hidden" name="id_pesanan" id="po_id_hidden" required>
+                        <div id="po_dropdown" class="smart-dropdown"></div>
+                        <small style="color:#94a3b8; font-size:11px; margin-top:6px; display:block;">💡 Hanya PO yang masih ada sisa (belum lunas kirim) yang muncul. Ketik minimal 1 huruf.</small>
+                    </div>
+                    <div id="infoPelangganBox" style="display:none; margin-top:15px; background:#0b0f19; border:1px solid #1e293b; border-radius:6px; padding:12px;">
+                        <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                            <div><small style="color:#64748b;">PELANGGAN</small><div id="infoPelangganNama" style="font-weight:bold; color:#facc15; font-size:13px;">-</div><small id="infoPelangganKode" style="color:#94a3b8;">-</small></div>
+                            <div><small style="color:#64748b;">ALAMAT</small><div id="infoAlamat" style="color:#fff; font-size:12px;">-</div></div>
+                            <div><small style="color:#64748b;">STATUS PO</small><div id="infoStatusPO" style="font-weight:bold;">-</div></div>
+                        </div>
+                        <div id="riwayatKirimBox" style="margin-top:10px; display:none;">
+                            <small style="color:#22c55e; font-weight:bold;">📦 RIWAYAT KIRIM SEBELUMNYA UNTUK PO INI:</small>
+                            <div id="riwayatList" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:15px; flex-wrap:wrap; background:#111827; padding:15px; border-radius:6px; border:1px solid #1e293b; margin-bottom:15px;">
+                    <div style="flex:1; min-width:160px;">
+                        <label>📅 TGL KIRIM *</label>
+                        <input type="date" name="tanggal_kirim" required value="{{ tanggal_hari_ini }}">
+                    </div>
+                    <div style="flex:1; min-width:160px;">
+                        <label>🚛 SOPIR / DRIVER</label>
+                        <input type="text" name="sopir" placeholder="NAMA SOPIR..." oninput="this.value=this.value.toUpperCase()">
+                    </div>
+                    <div style="flex:0.8; min-width:120px;">
+                        <label>🔢 NO POLISI</label>
+                        <input type="text" name="no_polisi" placeholder="B 1234 XYZ..." oninput="this.value=this.value.toUpperCase()">
+                    </div>
+                    <div style="flex:1; min-width:160px;">
+                        <label>🚚 EKSPEDISI</label>
+                        <input type="text" name="ekspedisi" placeholder="SENDIRI / JNE..." oninput="this.value=this.value.toUpperCase()">
+                    </div>
+                    <div style="flex:1; min-width:150px;">
+                        <label>STATUS KIRIM (OTOMATIS POTONG STOK)</label>
+                        <select name="status_kirim">
+                            <option value="DRAFT">DRAFT</option>
+                            <option value="DALAM PERJALANAN">DALAM PERJALANAN</option>
+                            <option value="TERKIRIM" selected>TERKIRIM (POTONG STOK)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="background:#111827; border:1px solid #1e293b; border-radius:6px; padding:12px; margin-bottom:15px;">
+                    <label>📍 ALAMAT KIRIM (OTOMATIS DARI PELANGGAN, BISA EDIT)</label>
+                    <textarea name="alamat_kirim" id="alamat_kirim" rows="2" placeholder="ALAMAT LENGKAP..." oninput="this.value=this.value.toUpperCase()"></textarea>
+                </div>
+
+                <div id="step3Box" style="display:none;">
+                    <label style="font-size:14px; color:#22c55e; margin-bottom:10px;">📦 STEP 2: ITEM DARI PO - ATUR QTY KIRIM (BISA SEBAGIAN)</label>
+                    <div id="wadahItemsKirim" style="margin-bottom:15px;"></div>
+                    <div style="background:rgba(34,197,94,0.1); border:1px solid #22c55e; border-radius:6px; padding:10px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                        <span style="color:#22c55e; font-weight:bold; font-size:12px;">Total Qty Akan Dikirim: <b id="totalKirim">0</b></span>
+                        <span style="color:#94a3b8; font-size:11px;">💡 Kosongkan = tidak ikut dikirim di SJ ini (untuk partial)</span>
+                    </div>
+                </div>
+
+                <div style="background:#111827; border:1px dashed #22c55e; border-radius:6px; padding:15px; margin-top:15px;">
+                    <label>📝 KETERANGAN SURAT JALAN</label>
+                    <textarea name="keterangan" rows="2" placeholder="Ex: SJ KEDUA UNTUK PO INI, SISA 20 LBR..." oninput="this.value=this.value.toUpperCase()"></textarea>
+                </div>
+
+                <button type="submit" id="btnSimpan" class="btn-simpan-transaksi" disabled style="opacity:0.5;">⚠️ PILIH PO DULU</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div style="background:#0b0f19; border:1px solid #1e293b; border-radius:8px; padding:20px;">
+    <h3 style="margin:0 0 15px 0; color:#fff; font-size:14px;">📋 RIWAYAT SURAT JALAN ({{ pengiriman_list|length }}) - 1 PO BISA BANYAK SJ</h3>
+    <div style="overflow-x:auto;">
+        <table>
+            <thead><tr><th>No SJ</th><th>Tgl</th><th>PO Asal</th><th>Pelanggan</th><th>Item Kirim</th><th>Sopir</th><th>Status</th><th>Aksi</th></tr></thead>
+            <tbody>
+                {% for k in pengiriman_list %}
+                <tr>
+                    <td style="font-weight:bold; color:#22c55e;">{{ k.no_pengiriman }}</td>
+                    <td>{{ k.tanggal_kirim.strftime('%d-%m-%Y') if k.tanggal_kirim else '-' }}</td>
+                    <td style="font-weight:bold; color:#ff7800;">{{ k.pesanan.no_pesanan if k.pesanan else '-' }}</td>
+                    <td style="text-align:left;"><b>{{ k.pelanggan.nama_pelanggan if k.pelanggan else k.id_pelanggan }}</b><br><small style="color:#94a3b8;">{{ k.pelanggan.kode_singkat if k.pelanggan else '' }}</small></td>
+                    <td>{{ k.items_kirim|length }} item</td>
+                    <td style="text-align:left;">{{ k.sopir or '-' }}<br><small>{{ k.no_polisi or '' }}</small></td>
+                    <td><span class="badge badge-{{ k.status_kirim }}">{{ k.status_kirim }}</span></td>
+                    <td><div style="display:flex; gap:4px; justify-content:center;"><a href="{{ url_for('detail_pengiriman_pelanggan', id_pengiriman=k.id_pengiriman) }}" style="background:#162235; color:#22c55e; border:1px solid #22c55e; padding:4px 8px; border-radius:4px; font-size:11px; text-decoration:none; font-weight:bold;">DETAIL</a><form action="{{ url_for('hapus_pengiriman_pelanggan', id_pengiriman=k.id_pengiriman) }}" method="POST" onsubmit="return confirm('Hapus SJ {{ k.no_pengiriman }}? Qty akan balik ke PO.')" style="display:inline;"><button type="submit" style="background:#7f1d1d; color:#f87171; border:1px solid #f87171; padding:4px 6px; border-radius:4px; font-size:11px; cursor:pointer;">🗑️</button></form></div></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" style="padding:30px; color:#64748b; font-style:italic;">📭 Belum ada pengiriman. Pilih PO di atas untuk buat SJ pertama.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+// FIX: pakai tojson & hitung sisa di Python biar aman dari kutip
+const pesananData = [
+    {% for ps in pesanan_sisa_list %}
+    {
+        id: {{ ps.id_pesanan }},
+        no: {{ ps.no_pesanan|tojson }},
+        pelanggan: {{ (ps.pelanggan.nama_pelanggan if ps.pelanggan else ps.id_pelanggan)|tojson }},
+        kode: {{ (ps.pelanggan.kode_singkat if ps.pelanggan else '')|tojson }},
+        status: {{ ps.status|tojson }},
+        tgl: "{{ ps.tanggal_pesan.strftime('%d-%m-%Y') if ps.tanggal_pesan else '' }}",
+        sisa: {{ (ps.items_pesanan|sum(attribute='jumlah_pesan') - ps.items_pesanan|sum(attribute='jumlah_terkirim'))|default(0)|int }}
+    }{{ "," if not loop.last else "" }}
+    {% endfor %}
+];
+console.log("pesananData loaded:", pesananData.length, pesananData);
+
+
+function toggleFormLipat(){
+    var isi = document.getElementById("isiFormMeliat");
+    var panah = document.getElementById("panahMinimize");
+    if(isi.style.maxHeight==="0px" || isi.style.maxHeight===""){
+        isi.style.maxHeight = isi.scrollHeight+1500+"px";
+        panah.innerText="▲";
+    } else {
+        isi.style.maxHeight="0px";
+        panah.innerText="▼";
+    }
+}
+window.addEventListener('load', function(){ toggleFormLipat(); initPOSearch(); });
+
+function initPOSearch(){
+    const input = document.getElementById("po_search_input");
+    const hidden = document.getElementById("po_id_hidden");
+    const dropdown = document.getElementById("po_dropdown");
+    if(!input || !dropdown){
+        console.error("Search elements not found!");
+        return;
+    }
+    input.addEventListener('input', function(){
+        const q = this.value.toLowerCase().trim();
+        console.log("Search q:", q, "data:", pesananData.length);
+        dropdown.innerHTML="";
+        if(!q){ 
+            dropdown.classList.remove('show'); 
+            hidden.value=""; 
+            const btn = document.getElementById("btnSimpan");
+            if(btn){ btn.disabled=true; btn.innerText="⚠️ PILIH PO DULU"; btn.style.opacity="0.5"; }
+            return; 
+        }
+        const filtered = pesananData.filter(p => {
+            const hay = (p.no+" "+p.pelanggan+" "+p.kode).toLowerCase();
+            return hay.includes(q);
+        }).slice(0,20);
+        console.log("Filtered:", filtered);
+        if(filtered.length===0){ 
+            dropdown.innerHTML='<div style="padding:12px; text-align:center; color:#64748b;">❌ PO tidak ditemukan atau sudah lunas kirim<br><small>Data total: '+pesananData.length+'</small></div>'; 
+            dropdown.classList.add('show'); 
+            return; 
+        }
+        filtered.forEach(p=>{
+            const div=document.createElement('div');
+            div.className='smart-option';
+            div.innerHTML=`<div style="display:flex; justify-content:space-between;"><span><b>${p.no}</b> - ${p.pelanggan}</span><small style="color:#22c55e;">Sisa: ${p.sisa}</small></div><small>${p.kode} | ${p.tgl} | ${p.status}</small>`;
+            div.onclick=()=>{ pilihPO(p.id, p.no); dropdown.classList.remove('show'); };
+            dropdown.appendChild(div);
+        });
+        dropdown.classList.add('show');
+    });
+    document.addEventListener('click', function(e){ 
+        const wrapper = document.getElementById("wrapperPO");
+        if(wrapper && !wrapper.contains(e.target)) dropdown.classList.remove('show'); 
+    });
+    // Auto focus biar langsung bisa ketik
+    setTimeout(()=>{ if(input) input.focus(); }, 500);
+}
+
+async function pilihPO(id, no){
+    const input = document.getElementById("po_search_input");
+    const hidden = document.getElementById("po_id_hidden");
+    input.value = no;
+    hidden.value = id;
+    input.classList.add('has-value');
+    document.getElementById("btnSimpan").disabled=false;
+    document.getElementById("btnSimpan").innerText="💾 SIMPAN SURAT JALAN";
+    document.getElementById("btnSimpan").style.opacity="1";
+    try{
+        console.log("Fetching PO id:", id);
+        const res = await fetch(`/api/get-pesanan-detail-lengkap/${id}`);
+        if(!res.ok){
+            throw new Error("HTTP "+res.status);
+        }
+        const data = await res.json();
+        console.log("PO data:", data);
+        if(data.error){
+            alert("Error: "+data.error);
+            return;
+        }
+        document.getElementById("infoPelangganBox").style.display="block";
+        document.getElementById("infoPelangganNama").innerText = data.nama_pelanggan;
+        document.getElementById("infoPelangganKode").innerText = data.kode_pelanggan+" | "+data.id_pelanggan;
+        document.getElementById("infoAlamat").innerText = data.alamat || "-";
+        document.getElementById("infoStatusPO").innerText = data.status_pesanan;
+        document.getElementById("alamat_kirim").value = data.alamat || "";
+        if(data.riwayat_kirim && data.riwayat_kirim.length>0){
+            document.getElementById("riwayatKirimBox").style.display="block";
+            const list = document.getElementById("riwayatList");
+            list.innerHTML="";
+            data.riwayat_kirim.forEach(r=>{
+                const span=document.createElement('span');
+                span.style.cssText="background:#162235; border:1px solid #1e293b; padding:3px 7px; border-radius:4px; font-size:10px; color:#94a3b8;";
+                span.innerText=`${r.no_sj} (${r.tgl}) - ${r.status}`;
+                list.appendChild(span);
+            });
+        } else {
+            document.getElementById("riwayatKirimBox").style.display="none";
+        }
+        const wadah = document.getElementById("wadahItemsKirim");
+        wadah.innerHTML="";
+        document.getElementById("step3Box").style.display="block";
+        data.items.forEach(it=>{
+            const row = document.createElement('div');
+            row.className = 'item-kirim-row' + (it.sisa<=0 ? ' selesai' : '');
+            const pct = it.jumlah_pesan>0 ? Math.round((it.jumlah_terkirim/it.jumlah_pesan)*100) : 0;
+            row.innerHTML = `
+                <input type="hidden" name="id_detail_pesanan[]" value="${it.id_detail_pesanan}">
+                <div style="flex:2; min-width:200px;">
+                    <div style="font-weight:bold; color:#facc15; font-size:12px;">${it.id_barang_jadi} - ${it.nama}</div>
+                    <small style="color:#94a3b8;">Panjang: ${it.panjang}M | ${it.ket}</small>
+                    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+                    <small style="color:#64748b; font-size:10px;">Progress: ${it.jumlah_terkirim}/${it.jumlah_pesan} (${pct}%)</small>
+                </div>
+                <div style="flex:1; min-width:120px; text-align:center;">
+                    <small style="color:#64748b; display:block;">PESAN / KIRIM / SISA</small>
+                    <span style="font-size:12px;"><b>${it.jumlah_pesan}</b> / <span style="color:#60a5fa;">${it.jumlah_terkirim}</span> / <b style="color:#22c55e;">${it.sisa}</b></span>
+                </div>
+                <div style="flex:0.8; min-width:100px;">
+                    <label style="font-size:10px; color:#22c55e; margin:0 0 3px 0;">QTY KIRIM *</label>
+                    <input type="number" name="jumlah_kirim[]" class="qty-input" min="0" max="${it.sisa}" step="1" value="${it.sisa>0 ? it.sisa : 0}" ${it.sisa<=0 ? 'disabled' : ''} oninput="hitungTotal(); validasiQty(this, ${it.sisa})" placeholder="0">
+                    ${it.sisa<=0 ? '<small style="color:#22c55e; font-size:10px;">✅ Lunas</small>' : '<small style="color:#94a3b8; font-size:10px;">Max: '+it.sisa+'</small>'}
+                </div>
+            `;
+            wadah.appendChild(row);
+        });
+        hitungTotal();
+        var isi=document.getElementById("isiFormMeliat");
+        if(isi.style.maxHeight && isi.style.maxHeight!=="0px"){ isi.style.maxHeight = (isi.scrollHeight+300)+"px"; }
+    }catch(e){
+        alert("Gagal tarik PO: "+e);
+    }
+}
+function validasiQty(input, max){
+    const val = parseFloat(input.value) || 0;
+    if(val > max){
+        input.classList.add('over');
+        input.value = max;
+        alert(`Qty melebihi sisa! Max ${max}`);
+    } else {
+        input.classList.remove('over');
+    }
+    hitungTotal();
+}
+function hitungTotal(){
+    let total=0;
+    document.querySelectorAll('input[name="jumlah_kirim[]"]').forEach(inp=>{
+        if(!inp.disabled){
+            total += parseFloat(inp.value) || 0;
+        }
+    });
+    document.getElementById("totalKirim").innerText = total;
+}
+</script>
+{% endblock %}

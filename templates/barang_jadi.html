@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .modal-background { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.75); }
+    .modal-content { background-color: #111827; color: #ffffff; margin: 2% auto; padding: 25px; border: 2px solid #ff7800; border-radius: 8px; width: 500px; box-shadow: 0 0 20px rgba(255, 120, 0, 0.2); position: relative; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ff7800; padding-bottom: 10px; margin-bottom: 15px; }
+    .modal-header h2 { color: #ffffff; margin: 0; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .close-btn { color: #94a3b8; font-size: 24px; font-weight: bold; cursor: pointer; transition: color 0.2s; }
+    .close-btn:hover { color: #ff7800; }
+    .modal-content label { display: block; margin-top: 8px; font-weight: bold; color: #ff7800; font-size: 11px; text-transform: uppercase; }
+    .modal-content input, .modal-content select, .modal-content textarea { background: #0b0f19 !important; color: #ffffff !important; border: 1px solid #1e293b; width: 100%; padding: 7px; margin: 4px 0 10px; border-radius: 4px; font-size: 13px; box-sizing: border-box; }
+    .modal-content input:focus, .modal-content select:focus, .modal-content textarea:focus { border-color: #ff7800 !important; outline: none; box-shadow: 0 0 8px rgba(255, 120, 0, 0.4); }
+    .btn-tambah-utama { background: #ff7800; color: #000000; border: none; padding: 10px 20px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-bottom: 20px; text-transform: uppercase; font-size: 13px; box-shadow: 0 4px 6px rgba(255, 120, 0, 0.2); }
+    .btn-tambah-utama:hover { background: #e06600; box-shadow: 0 0 10px rgba(255, 120, 0, 0.4); }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #1e293b; padding-top: 15px; margin-top: 10px; }
+    .btn-simpan { background: #ff7800; color: #000000; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 12px; }
+    .btn-batal { background: #162235; color: #fff; border: 1px solid #ff7800; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+	    /* =================================================== */
+    /* PANEL SLIDE KANAN (DRAWER) LUXURY BARANG JADI       */
+    /* =================================================== */
+    .side-panel-background { display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); opacity: 0; transition: opacity 0.3s ease; }
+    .side-panel-background.buka { display: block; opacity: 1; }
+    .side-panel-content { position: fixed; right: -460px; top: 0; width: 450px; height: 100vh; background-color: #111827; border-left: 3px solid #ff7800; box-shadow: -5px 0 25px rgba(0,0,0,0.5); padding: 25px; box-sizing: border-box; transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1); overflow-y: auto; color: #fff; z-index: 1060; }
+    .side-panel-content.luncur { right: 0; }
+    .side-panel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ff7800; padding-bottom: 12px; margin-bottom: 15px; }
+    .side-panel-header h2 { font-size: 15px; font-weight: bold; color: #ffffff; text-transform: uppercase; margin: 0; letter-spacing: 0.5px; }
+    .side-panel-content label { display: block; margin-top: 10px; font-weight: bold; color: #ff7800; font-size: 11px; text-transform: uppercase; }
+    .side-panel-content input, .side-panel-content textarea { background: #0b0f19 !important; color: #ffffff !important; border: 1px solid #1e293b; width: 100%; padding: 8px; margin: 4px 0 10px; border-radius: 4px; font-size: 13px; box-sizing: border-box; }
+    .side-panel-content input:focus, .side-panel-content textarea:focus { border-color: #ff7800 !important; outline: none; box-shadow: 0 0 8px rgba(255, 120, 0, 0.4); }
+
+</style>
+
+<div class="header-halaman" style="margin-bottom: 25px; border-l-4 border-[#ff7800]; padding-left: 15px;">
+    <span class="breadcrumb" style="color: #94a3b8; font-size: 12px; text-transform: uppercase;">Master Data &gt;</span>
+    <h1 style="color: #ffffff; margin: 5px 0 0 0; font-size: 24px; font-weight: bold; tracking-wider;">BARANG JADI</h1>
+    <p style="color: #64748b; margin: 2px 0 0 0; font-size: 13px;">Registrasi Kode, Nama, dan Tipe Produk Plafon & Lis PVC</p>
+</div>
+
+<button class="btn-tambah-utama" onclick="bukaModal()">➕ Tambah Barang Jadi Baru</button>
+
+<div id="modalInput" class="modal-background">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>📦 INPUT REGISTRASI BARANG JADI</h2>
+            <span class="close-btn" onclick="tutupModal()">&times;</span>
+        </div>
+        <form action="/master/barang-jadi/tambah" method="POST">
+            <label>🗂️ Kategori Produk</label>
+            <select name="kategori" required>
+                <option value="">-- Pilih Kategori --</option>
+                <option value="PLAFON">PLAFON PVC</option>
+                <option value="LIS">LIS JADI / ACCESSORIES</option>
+            </select>
+            <label>📦 Nama Barang / Tipe Model</label>
+            <input type="text" name="nama" required placeholder="Ex: PLAFON PUTIH GLOSSY..." oninput="this.value = this.value.toUpperCase()">
+            <label>🎞️ Tipe Film / Motif Hulu</label>
+            <input type="text" name="tipe_film" placeholder="Ex: BF-001 atau NP-29" oninput="this.value = this.value.toUpperCase()">
+            <label>📐 Satuan Bentuk</label>
+            <input type="text" name="satuan" required value="Lembar" placeholder="Contoh: LBR, BTG" oninput="this.value = this.value.toUpperCase()">
+            <div style="background:rgba(255,120,0,0.08); border:1px dashed #ff7800; border-radius:6px; padding:12px; margin:10px 0;">
+                <label style="color:#ff7800; font-size:12px; margin-bottom:8px;">📦 SALDO AWAL PER PANJANG (AUDIT PER UKURAN - ISI SESUAI FISIK GUDANG)</label>
+                <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:8px;">
+                    <div><small style="color:#94a3b8; font-size:10px;">3 METER</small><input type="number" min="0" step="1" name="saldo_3" value="0" placeholder="0" style="border:1px solid #22c55e !important;"></div>
+                    <div><small style="color:#facc15; font-size:10px; font-weight:bold;">4 METER (STD)</small><input type="number" min="0" step="1" name="saldo_4" value="0" placeholder="0" style="border:2px solid #facc15 !important;"></div>
+                    <div><small style="color:#94a3b8; font-size:10px;">5 METER</small><input type="number" min="0" step="1" name="saldo_5" value="0" placeholder="0"></div>
+                    <div><small style="color:#94a3b8; font-size:10px;">6 METER</small><input type="number" min="0" step="1" name="saldo_6" value="0" placeholder="0"></div>
+                    <div><small style="color:#f87171; font-size:10px;">REQUEST</small><input type="number" min="0" step="1" name="saldo_request" value="0" placeholder="0" style="border:1px solid #f87171 !important;"></div>
+                </div>
+                <small style="color:#64748b; font-size:10px; margin-top:6px; display:block;">💡 Contoh: Punya fisik 20 lbr 3M, 100 lbr 4M, 10 lbr 5M → isi sesuai itu. Total otomatis = 130. Audit nanti per panjang balance.</small>
+                <input type="hidden" name="saldo_awal" id="saldo_awal_total" value="0">
+            </div>
+            <script>
+            // Auto sum total untuk display
+            function hitungTotalSaldoAwal(){
+                let t=0;
+                ['saldo_3','saldo_4','saldo_5','saldo_6','saldo_request'].forEach(n=>{
+                    const el=document.querySelector(`[name="${n}"]`);
+                    if(el) t+=parseFloat(el.value)||0;
+                });
+                const tot=document.getElementById('saldo_awal_total');
+                if(tot) tot.value=t;
+            }
+            document.querySelectorAll('[name^="saldo_"]').forEach(el=>{ el.addEventListener('input', hitungTotalSaldoAwal); });
+            </script>
+            <label>🥣 Rumus Adonan Produksi (BOM)</label>
+            <textarea name="rumus" rows="2" placeholder="Bahan baku pendukung masakan..." oninput="this.value = this.value.toUpperCase()" style="resize: none;"></textarea>
+            <label>📝 Catatan Keterangan Khusus</label>
+            <textarea name="keterangan" rows="2" placeholder="Catatan internal..." oninput="this.value = this.value.toUpperCase()" style="resize: none;"></textarea>
+            <div class="modal-footer">
+                <button type="button" class="btn-batal" onclick="tutupModal()">Batal</button>
+                <button type="submit" class="btn-simpan">💾 Simpan Data</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="card" style="padding: 20px; background: #0b0f19; border-top: 4px solid #ff7800; border-radius: 8px; color: #fff; border: 1px solid #1e293b;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+        <h3 style="margin: 0; color: #ffffff; text-transform: uppercase; font-size: 16px; letter-spacing: 0.5px;">📜 DATABASE VARIASI PRODUK AKTIF</h3>
+        <div style="width: 300px; margin: 0;">
+            <input type="text" id="inputCariBarang" onkeyup="cariBarangInstan()" placeholder="🔍 Cari nama, kode, atau kategori..." style="width: 100%; padding: 8px; background: #111827; color: #fff; border: 1px solid #1e293b; border-radius: 6px; font-size: 13px; margin: 0;">
+        </div>
+    </div>
+    <div style="overflow-x: auto; max-height: 520px; overflow-y: auto; border-radius: 6px; border: 1px solid #162235;">
+        <table id="tabelBarangJadi" style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; color: #fff;">
+            <!-- REVISI CERDAS: MENAMBAHKAN PENGUNCI POSISI STICKY AGAR KEPALA TABEL DIAM -->
+<thead>
+    <tr style="background: #162235; color: #ffffff; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid #ff7800; font-size: 11px; position: sticky; top: 0; z-index: 10;">
+        <th style="padding: 8px; border: 1px solid #1f2937; width: 70px; color: #ff7800; font-weight: 800;">KODE ID</th>                
+        <th style="padding: 8px; border: 1px solid #1f2937; width: 80px;">KATEGORI</th>
+        <th style="padding: 8px; border: 1px solid #1f2937;">NAMA BARANG / MODEL</th>
+        <th style="padding: 8px; border: 1px solid #1f2937; width: 60px;">3M</th>
+        <th style="padding: 8px; border: 1px solid #1f2937; width: 60px; background: rgba(250,204,21,0.15); color:#facc15;">4M STD</th>
+        <th style="padding: 8px; border: 1px solid #1f2937; width: 60px;">5M</th>
+        <th style="padding: 8px; border: 1px solid #1f2937; width: 60px;">6M</th>
+        <th style="padding: 8px; border: 1px solid #1f2937; width: 60px; color:#f87171;">REQ</th>
+        <th style="padding: 8px; border: 1px solid #1f2937; width: 70px;">TOTAL LBR</th>
+        <th style="padding: 8px; border: 1px solid #1f2937; width: 90px; color:#34d399;">METER LARI</th>
+        <th style="padding: 8px; border: 1px solid #1f2937; width: 90px;">AKSI</th>
+    </tr>
+</thead>
+
+            <tbody>
+                {% for b in daftar %}
+                {% set sm = {'3':0,'4':0,'5':0,'6':0,'REQUEST':0} %}
+                {% for sp in b.saldo_per_panjang %}
+                    {% if sp.panjang in sm %}{% set _ = sm.__setitem__(sp.panjang, sp.saldo_awal|int) %}
+                    {% else %}{% set _ = sm.__setitem__('REQUEST', (sm['REQUEST'] + sp.saldo_awal|int)) %}{% endif %}
+                {% endfor %}
+                {% set total_lbr = sm['3']+sm['4']+sm['5']+sm['6']+sm['REQUEST'] %}
+                {% if total_lbr==0 %}{% set total_lbr = b.saldo_awal|int %}{% endif %}
+                {% set meter_lari = sm['3']*3 + sm['4']*4 + sm['5']*5 + sm['6']*6 + sm['REQUEST']*4 %}
+                <tr style="border-bottom: 1px solid #1f2937; background: #0b0f19;" onmouseover="this.style.background='#162235'" onmouseout="this.style.background='#0b0f19'">
+                    <td style="padding: 8px; border: 1px solid #1f2937; font-family: monospace; font-weight: 900; color: #facc15; font-size: 12px;">{{ b.id_barang_jadi }}</td>
+                    <td style="padding: 8px; border: 1px solid #1f2937;"><span style="background: rgba(255,120,0,0.08); color: #f8fafc; padding: 2px 6px; border: 1px solid #ff7800; border-radius: 4px; font-size: 10px; font-weight: bold;">{{ b.kategori }}</span><br><small style="color:#64748b; font-size:9px;">{{ b.tipe_film or '' }} | {{ b.satuan }}</small></td>
+                    <td style="padding: 8px; border: 1px solid #1f2937; text-align: left; font-weight: bold; color: #f8fafc; font-size: 12px;">{{ b.nama_barang }}<br><small style="color:#94a3b8; font-weight:normal;">{{ b.keterangan or '' }}</small></td>
+                    <td style="padding: 8px; border: 1px solid #1f2937; color: #22c55e; font-weight: bold;">{{ sm['3'] }}</td>
+                    <td style="padding: 8px; border: 1px solid #1f2937; background: rgba(250,204,21,0.08); color: #facc15; font-weight: 900;">{{ sm['4'] if sm['4']>0 else (b.saldo_awal|int if total_lbr==b.saldo_awal|int else 0) }}</td>
+                    <td style="padding: 8px; border: 1px solid #1f2937; color: #60a5fa; font-weight: bold;">{{ sm['5'] }}</td>
+                    <td style="padding: 8px; border: 1px solid #1f2937; color: #a78bfa; font-weight: bold;">{{ sm['6'] }}</td>
+                    <td style="padding: 8px; border: 1px solid #1f2937; color: #f87171; font-weight: bold;">{{ sm['REQUEST'] }}</td>
+                    <td style="padding: 8px; border: 1px solid #1f2937; color: #94a3b8; font-weight:bold;">{{ total_lbr }}</td>
+                    <td style="padding: 8px; border: 1px solid #1f2937; font-weight: bold; color: #34d399; font-family: monospace; font-size:11px;">{{ meter_lari }} M<br><small style="color:#64748b; font-weight:normal;">{{ b.stok_akhir|int }} LBR</small></td>
+                    <td style="padding: 12px 10px; border: 1px solid #1f2937;">
+                        <div style="display: flex; gap: 5px; justify-content: center; align-items: center;">
+                            <button type="button" onclick="bukaPanelEditBarang('{{ b.id_barang_jadi }}', '{{ b.kategori }}', '{{ b.nama_barang }}', '{{ b.tipe_film or '' }}', '{{ b.satuan }}', '{{ b.saldo_awal|int }}', '{{ b.rumus_produksi or '' }}', '{{ b.keterangan or '' }}')" style="background: #064e3b; color: #34d399; padding: 4px 8px; border: 1px solid #34d399; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; display: inline-block;">✏️</button>
+                            <!-- KUNCI ANTI HAPUS ACCIDENT -->
+                            <button type="button" onclick="kunciHapusMaster('{{ b.id_barang_jadi }}', '{{ b.nama_barang }}', {{ b.stok_akhir|default(0) }})" style="background: #7f1d1d; color: #f87171; padding: 4px 8px; border: 1px solid #f87171; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; display: inline-block;">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" style="padding: 60px; color: #64748b; font-style: italic; background: #0b0f19; font-size: 13px;">📭 Belum ada variasi data barang jadi terdaftar.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<!-- =================================================== -->
+<!-- JENDELA PANEL SLIDE KANAN (DRAWER EDIT BARANG JADI) -->
+<!-- =================================================== -->
+<div id="latarPanelEditBarang" class="side-panel-background" onclick="tutupPanelEditBarang()"></div>
+<div id="kontenPanelEditBarang" class="side-panel-content">
+    <div class="side-panel-header">
+        <h2>✏️ PERBARUI PRODUK JADI</h2>
+        <span class="close-btn" onclick="tutupPanelEditBarang()">&times;</span>
+    </div>
+    
+    <form id="formEditBarangMurni" method="POST">
+        <label>🔑 Kode ID Produk (Sistem Mengunci)</label>
+        <input type="text" id="editIdBarang" disabled style="color: #94a3b8 !important; font-family: monospace; font-weight: bold;">
+
+        <label>🗂️ Kategori Produk</label>
+        <input type="text" id="editKategoriBarang" disabled style="color: #94a3b8 !important; font-weight: bold;">
+
+        <label>📦 Nama Barang / Tipe Model</label>
+        <input type="text" name="nama" id="editNamaBarang" required oninput="this.value = this.value.toUpperCase()">
+
+        <label>🎞️ Tipe Film / Motif Hulu</label>
+        <input type="text" name="tipe_film" id="editFilmBarang" oninput="this.value = this.value.toUpperCase()">
+
+        <label>📐 Satuan Bentuk</label>
+        <input type="text" name="satuan" id="editSatuanBarang" required oninput="this.value = this.value.toUpperCase()">
+
+        <div style="background:rgba(255,120,0,0.08); border:1px dashed #ff7800; border-radius:6px; padding:12px; margin:12px 0;">
+            <label style="color:#22c55e; font-size:12px; margin-bottom:8px; margin-top:0;">📦 SALDO AWAL PER PANJANG (FIX - TIDAK NGUMPUL DI 4M LAGI)</label>
+            <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:8px;">
+                <div><small style="color:#22c55e; font-size:10px;">3 METER</small><input type="number" min="0" step="1" name="saldo_3" id="editSaldo3" value="0" style="border:1px solid #22c55e !important;"></div>
+                <div><small style="color:#facc15; font-size:10px; font-weight:bold;">4 METER (STD)</small><input type="number" min="0" step="1" name="saldo_4" id="editSaldo4" value="0" style="border:2px solid #facc15 !important;"></div>
+                <div><small style="color:#60a5fa; font-size:10px;">5 METER</small><input type="number" min="0" step="1" name="saldo_5" id="editSaldo5" value="0"></div>
+                <div><small style="color:#a78bfa; font-size:10px;">6 METER</small><input type="number" min="0" step="1" name="saldo_6" id="editSaldo6" value="0"></div>
+                <div><small style="color:#f87171; font-size:10px;">REQUEST</small><input type="number" min="0" step="1" name="saldo_request" id="editSaldoReq" value="0"></div>
+            </div>
+            <small id="infoTotalSaldo" style="color:#94a3b8; font-size:10px; display:block; margin-top:8px;">Total: 0 LBR</small>
+        </div>
+
+        <label>🥣 Rumus Adonan Produksi (BOM)</label>
+        <textarea name="rumus" id="editRumusBarang" rows="2" oninput="this.value = this.value.toUpperCase()" style="resize: none;"></textarea>
+
+        <label>📝 Catatan Keterangan Khusus</label>
+        <textarea name="keterangan" id="editKeteranganBarang" rows="2" oninput="this.value = this.value.toUpperCase()" style="resize: none;"></textarea>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #1e293b; padding-top: 15px; margin-top: 15px;">
+            <button type="button" class="btn-batal" onclick="tutupPanelEditBarang()">Batal</button>
+            <button type="submit" class="btn-simpan">💾 Simpan Per Panjang</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    var modal = document.getElementById("modalInput");
+    function bukaModal() { modal.style.display = "block"; }
+    function tutupModal() { modal.style.display = "none"; }
+    window.onclick = function(event) { if (event.target == modal) { modal.style.display = "none"; } }
+
+    function cariBarangInstan() {
+        var input, filter, table, tr, i, j, td, match;
+        input = document.getElementById("inputCariBarang");
+        filter = input.value.toUpperCase();
+        table = document.getElementById("tabelBarangJadi");
+        tr = table.getElementsByTagName("tr");
+
+        for (i = 1; i < tr.length; i++) {
+            match = false;
+            // Scan Kolom 0 (ID), Kolom 1 (Kategori), dan Kolom 2 (Nama) secara presisi
+            for (j = 0; j <= 2; j++) {
+                td = tr[i].getElementsByTagName("td")[j];
+                if (td) {
+                    if ((td.textContent || td.innerText).toUpperCase().indexOf(filter) > -1) {
+                        match = true;
+                        break;
+                    }
+                }
+            }
+            tr[i].style.display = match ? "" : "none";
+        }
+    }
+	    // ===================================================
+    // BAGIAN 3: ENGINE JAVASCRIPT ANIMASI SLIDE PANEL BARANG JADI
+    // ===================================================
+    var latarPanelBarang = document.getElementById("latarPanelEditBarang");
+    var kontenPanelBarang = document.getElementById("kontenPanelEditBarang");
+
+    function bukaPanelEditBarang(id, kategori, nama, tipeFilm, satuan, saldo, rumus, keterangan) {
+        document.getElementById("formEditBarangMurni").action = "/master/barang-jadi/edit/" + id;
+        document.getElementById("editIdBarang").value = id;
+        document.getElementById("editKategoriBarang").value = kategori;
+        document.getElementById("editNamaBarang").value = nama;
+        document.getElementById("editFilmBarang").value = tipeFilm;
+        document.getElementById("editSatuanBarang").value = satuan;
+        document.getElementById("editRumusBarang").value = rumus;
+        document.getElementById("editKeteranganBarang").value = keterangan;
+        // reset dulu
+        document.getElementById("editSaldo3").value = 0;
+        document.getElementById("editSaldo4").value = 0;
+        document.getElementById("editSaldo5").value = 0;
+        document.getElementById("editSaldo6").value = 0;
+        document.getElementById("editSaldoReq").value = 0;
+        document.getElementById("infoTotalSaldo").innerText = "Memuat saldo per panjang...";
+
+        // Fetch saldo per panjang via API yang sudah fix
+        fetch('/api/get-stok-barang-jadi-per-panjang/'+id)
+        .then(r=>r.json()).then(d=>{
+            if(d.per_panjang){
+                let s = d.per_panjang;
+                document.getElementById("editSaldo3").value = s['3']!==undefined ? s['3'] : (s._saldo_map ? (s._saldo_map['3']||0) : 0);
+                document.getElementById("editSaldo4").value = s['4']!==undefined ? s['4'] : (s._saldo_map ? (s._saldo_map['4']||0) : 0);
+                document.getElementById("editSaldo5").value = s['5']!==undefined ? s['5'] : (s._saldo_map ? (s._saldo_map['5']||0) : 0);
+                document.getElementById("editSaldo6").value = s['6']!==undefined ? s['6'] : (s._saldo_map ? (s._saldo_map['6']||0) : 0);
+                document.getElementById("editSaldoReq").value = s['REQUEST']!==undefined ? s['REQUEST'] : (s._saldo_map ? (s._saldo_map['REQUEST']||0) : 0);
+                let total = (parseInt(document.getElementById("editSaldo3").value)||0) + (parseInt(document.getElementById("editSaldo4").value)||0) + (parseInt(document.getElementById("editSaldo5").value)||0) + (parseInt(document.getElementById("editSaldo6").value)||0) + (parseInt(document.getElementById("editSaldoReq").value)||0);
+                document.getElementById("infoTotalSaldo").innerText = "Total: "+total+" LBR (dari saldo_per_panjang, bukan numpuk di 4M)";
+            }
+        }).catch(e=>{
+            // fallback pakai saldo total lama ke 4M
+            document.getElementById("editSaldo4").value = saldo;
+            document.getElementById("infoTotalSaldo").innerText = "Total (fallback): "+saldo+" LBR - API gagal, pakai total lama";
+        });
+
+        latarPanelBarang.style.display = "block";
+        setTimeout(function() {
+            latarPanelBarang.classList.add("buka");
+            kontenPanelBarang.classList.add("luncur");
+        }, 50);
+    }
+    // auto hitung total saat edit
+    ['editSaldo3','editSaldo4','editSaldo5','editSaldo6','editSaldoReq'].forEach(function(id){
+        let el=document.getElementById(id);
+        if(el) el.addEventListener('input', function(){
+            let total = (parseInt(document.getElementById("editSaldo3").value)||0) + (parseInt(document.getElementById("editSaldo4").value)||0) + (parseInt(document.getElementById("editSaldo5").value)||0) + (parseInt(document.getElementById("editSaldo6").value)||0) + (parseInt(document.getElementById("editSaldoReq").value)||0);
+            document.getElementById("infoTotalSaldo").innerText = "Total: "+total+" LBR";
+        });
+    });
+
+
+    function tutupPanelEditBarang() {
+        // Tarik kembali panel keluar ke sisi kanan layar
+        kontenPanelBarang.classList.remove("luncur");
+        latarPanelBarang.classList.remove("buka");
+        setTimeout(function() {
+            latarPanelBarang.style.display = "none";
+        }, 300);
+    }
+
+
+    // === KUNCI MASTER PLAFON ANTI ACCIDENT ===
+    function kunciHapusMaster(id, nama, stok) {
+        if (stok > 0) {
+            alert('🔒 KUNCI AKTIF:\n' + nama + ' (' + id + ') masih ada stok ' + stok + ' LEMBAR.\nKosongkan stok dulu via Kartu Stok / Penyesuaian.');
+            return;
+        }
+        var ketik = prompt('⚠️ HAPUS MASTER TERKUNCI:\n\nAnda akan menghapus: ' + nama + ' (' + id + ')\n\nKetik kode ID "' + id + '" untuk konfirmasi hapus permanen:\n\n(Kosongkan / Cancel untuk batal)');
+        if (ketik === null) return;
+        if (ketik.toUpperCase().trim() !== id.toUpperCase().trim()) {
+            alert('❌ Kode salah! Hapus dibatalkan.\nAnda mengetik: ' + ketik);
+            return;
+        }
+        if (!confirm('FINAL CHECK:\nYakin hapus permanen ' + nama + ' (' + id + ')?\n\nData master Y-01 s/d Y-10 & LIS X2A yang di screenshot akan hilang!')) return;
+        
+        // Buat form dinamis dengan konfirmasi
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/master/barang-jadi/hapus/' + id;
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'konfirmasi_hapus';
+        input.value = id;
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+</script>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .modal-background { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.75); }
+    .modal-content { background-color: #111827; color: #ffffff; margin: 3% auto; padding: 25px; border: 2px solid #facc15; border-radius: 8px; width: 520px; box-shadow: 0 0 20px rgba(250,204,21,0.2); position: relative; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #facc15; padding-bottom: 10px; margin-bottom: 20px; }
+    .modal-header h2 { color: #ffffff; margin: 0; font-size: 16px; text-transform: uppercase; }
+    .close-btn { color: #94a3b8; font-size: 24px; font-weight: bold; cursor: pointer; }
+    .close-btn:hover { color: #facc15; }
+    .modal-content label { display: block; margin-top: 10px; font-weight: bold; color: #facc15; font-size: 11px; text-transform: uppercase; }
+    .modal-content input, .modal-content textarea { background: #0b0f19 !important; color: #ffffff !important; border: 1px solid #1e293b; width: 100%; padding: 9px; margin: 4px 0 8px; border-radius: 4px; font-size: 13px; box-sizing: border-box; }
+    .modal-content input:focus, .modal-content textarea:focus { border-color: #facc15 !important; outline: none; box-shadow: 0 0 8px rgba(250,204,21,0.4); }
+    .btn-tambah-utama { background: #facc15; color: #000000; border: none; padding: 10px 20px; font-weight: 900; border-radius: 6px; cursor: pointer; margin-bottom: 20px; text-transform: uppercase; font-size: 13px; }
+    .btn-tambah-utama:hover { background: #eab308; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #1e293b; padding-top: 15px; margin-top: 10px; }
+    .btn-simpan { background: #facc15; color: #000; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 12px; }
+    .btn-batal { background: #162235; color: #fff; border: 1px solid #facc15; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+    .side-panel-background { display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); opacity: 0; transition: opacity 0.3s ease; }
+    .side-panel-background.buka { display: block; opacity: 1; }
+    .side-panel-content { position: fixed; right: -460px; top: 0; width: 450px; height: 100vh; background-color: #111827; border-left: 3px solid #facc15; box-shadow: -5px 0 25px rgba(0,0,0,0.5); padding: 30px 25px; box-sizing: border-box; transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1); overflow-y: auto; color: #fff; z-index: 1060; }
+    .side-panel-content.luncur { right: 0; }
+    .side-panel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #facc15; padding-bottom: 12px; margin-bottom: 20px; }
+    .side-panel-content label { display: block; margin-top: 12px; font-weight: bold; color: #facc15; font-size: 11px; text-transform: uppercase; }
+    .side-panel-content input, .side-panel-content textarea { background: #0b0f19 !important; color: #fff !important; border: 1px solid #1e293b; width: 100%; padding: 9px; margin: 5px 0 10px; border-radius: 4px; font-size: 13px; box-sizing: border-box; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; color: #fff; }
+    th { padding: 10px; border: 1px solid #1e293b; background: #162235; color: #fff; font-weight: bold; text-transform: uppercase; font-size: 11px; }
+    td { padding: 10px; border: 1px solid #1e293b; background: #0b0f19; }
+</style>
+
+<div class="header-halaman" style="margin-bottom: 25px; border-left: 4px solid #facc15; padding-left: 15px;">
+    <span class="breadcrumb" style="color: #94a3b8; font-size: 12px; text-transform: uppercase;">Master Data &gt;</span>
+    <h1 style="color: #ffffff; margin: 5px 0 0 0; font-size: 24px; font-weight: bold;">PELANGGAN / CUSTOMER</h1>
+    <p style="color: #64748b; margin: 2px 0 0 0; font-size: 13px;">Database Mitra Penerima Barang Jadi Plafon & Lis PVC Gemi Setiti</p>
+</div>
+
+<button class="btn-tambah-utama" onclick="bukaModal()">➕ Tambah Pelanggan Baru</button>
+
+<div id="modalInput" class="modal-background">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>👥 INPUT PELANGGAN BARU</h2>
+            <span class="close-btn" onclick="tutupModal()">&times;</span>
+        </div>
+        <form action="{{ url_for('tambah_pelanggan') }}" method="POST">
+            <label>🏢 Nama Pelanggan / Toko</label>
+            <input type="text" name="nama" required placeholder="Ex: TOKO SUMBER REJEKI SEMARANG" oninput="this.value=this.value.toUpperCase()">
+            <label>🔑 Kode Singkat</label>
+            <input type="text" name="kode" maxlength="10" required placeholder="Ex: TSR, CUST01" oninput="this.value=this.value.toUpperCase()">
+            <label>📞 Telepon / WA</label>
+            <input type="text" name="telepon" placeholder="Ex: 0812XXXX">
+            <label>📍 Alamat Lengkap</label>
+            <textarea name="alamat" rows="2" placeholder="Alamat toko / gudang pelanggan..." oninput="this.value=this.value.toUpperCase()"></textarea>
+            <label>📝 Keterangan</label>
+            <textarea name="keterangan" rows="2" placeholder="Catatan khusus pelanggan..." oninput="this.value=this.value.toUpperCase()"></textarea>
+            <div class="modal-footer">
+                <button type="button" class="btn-batal" onclick="tutupModal()">Batal</button>
+                <button type="submit" class="btn-simpan">💾 Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card" style="padding: 20px; background: #0b0f19; border-top: 4px solid #facc15; border-radius: 8px; color: #fff; border: 1px solid #1e293b;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+        <h3 style="margin:0; color:#facc15; font-size:14px;">📋 DAFTAR PELANGGAN ({{ pelanggan_list|length }} MITRA)</h3>
+        <input type="text" id="inputCari" onkeyup="cariInstan()" placeholder="🔍 Cari nama / kode / alamat..." style="background:#111827; border:1px solid #1e293b; color:#fff; padding:7px 12px; border-radius:6px; width:260px;">
+    </div>
+    <div style="overflow-x:auto;">
+        <table id="tabelPelanggan">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Kode</th>
+                    <th style="text-align:left; padding-left:15px;">Nama Pelanggan</th>
+                    <th>Telepon</th>
+                    <th style="text-align:left;">Alamat</th>
+                    <th>Total Pesanan</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in pelanggan_list %}
+                <tr>
+                    <td style="font-family:monospace; font-weight:900; color:#facc15;">{{ p.id_pelanggan }}</td>
+                    <td style="font-weight:bold;">{{ p.kode_singkat }}</td>
+                    <td style="text-align:left; padding-left:15px; font-weight:bold;">{{ p.nama_pelanggan }}</td>
+                    <td>{{ p.telepon or '-' }}</td>
+                    <td style="text-align:left; font-size:11px; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ p.alamat or '-' }}</td>
+                    <td><span style="background:rgba(250,204,21,0.1); border:1px solid #facc15; color:#facc15; padding:2px 8px; border-radius:4px; font-weight:bold;">{{ p.daftar_pesanan|length }}</span></td>
+                    <td>
+                        <div style="display:flex; gap:5px; justify-content:center;">
+                            <button onclick="bukaPanelEdit('{{ p.id_pelanggan }}','{{ p.nama_pelanggan }}','{{ p.kode_singkat }}','{{ p.telepon or '' }}','{{ p.alamat or '' }}','{{ p.keterangan or '' }}')" style="background:#162235; color:#facc15; border:1px solid #facc15; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">✏️</button>
+                            <form action="{{ url_for('hapus_pelanggan', id=p.id_pelanggan) }}" method="POST" onsubmit="return confirm('Hapus pelanggan {{ p.nama_pelanggan }}?')" style="display:inline;">
+                                <button type="submit" style="background:#7f1d1d; color:#f87171; border:1px solid #f87171; padding:4px 8px; border-radius:4px; font-size:11px; cursor:pointer;">🗑️</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" style="padding:30px; color:#64748b; font-style:italic;">📭 Belum ada pelanggan terdaftar. Tambahkan pelanggan pertama.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- PANEL EDIT -->
+<div id="latarPanel" class="side-panel-background" onclick="tutupPanel()"></div>
+<div id="kontenPanel" class="side-panel-content">
+    <div class="side-panel-header">
+        <h2>✏️ EDIT PELANGGAN</h2>
+        <span class="close-btn" onclick="tutupPanel()">&times;</span>
+    </div>
+    <form id="formEdit" method="POST">
+        <label>ID Pelanggan (Lock)</label>
+        <input type="text" id="editId" disabled style="color:#94a3b8 !important; font-weight:bold; font-family:monospace;">
+        <label>Nama Pelanggan</label>
+        <input type="text" name="nama" id="editNama" required oninput="this.value=this.value.toUpperCase()">
+        <label>Kode Singkat</label>
+        <input type="text" name="kode" id="editKode" maxlength="10" required oninput="this.value=this.value.toUpperCase()">
+        <label>Telepon</label>
+        <input type="text" name="telepon" id="editTelp">
+        <label>Alamat</label>
+        <textarea name="alamat" id="editAlamat" rows="3" oninput="this.value=this.value.toUpperCase()"></textarea>
+        <label>Keterangan</label>
+        <textarea name="keterangan" id="editKet" rows="2" oninput="this.value=this.value.toUpperCase()"></textarea>
+        <div style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid #1e293b; padding-top:15px; margin-top:15px;">
+            <button type="button" class="btn-batal" onclick="tutupPanel()">Batal</button>
+            <button type="submit" class="btn-simpan">💾 Update</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    var modal = document.getElementById("modalInput");
+    function bukaModal(){ modal.style.display="block"; }
+    function tutupModal(){ modal.style.display="none"; }
+    window.onclick = function(e){ if(e.target==modal) modal.style.display="none"; }
+
+    function cariInstan(){
+        var input=document.getElementById("inputCari"), filter=input.value.toUpperCase(), table=document.getElementById("tabelPelanggan"), tr=table.getElementsByTagName("tr");
+        for(var i=1;i<tr.length;i++){ var show=false; var tds=tr[i].getElementsByTagName("td"); for(var j=0;j<tds.length;j++){ if(tds[j] && tds[j].innerText.toUpperCase().indexOf(filter)>-1){ show=true; break; } } tr[i].style.display=show?"":"none"; }
+    }
+
+    var latar=document.getElementById("latarPanel"), konten=document.getElementById("kontenPanel");
+    function bukaPanelEdit(id,nama,kode,telp,alamat,ket){
+        document.getElementById("formEdit").action="/master/pelanggan/edit/"+id;
+        document.getElementById("editId").value=id;
+        document.getElementById("editNama").value=nama;
+        document.getElementById("editKode").value=kode;
+        document.getElementById("editTelp").value=telp;
+        document.getElementById("editAlamat").value=alamat;
+        document.getElementById("editKet").value=ket;
+        latar.style.display="block"; setTimeout(()=>{latar.classList.add("buka"); konten.classList.add("luncur");},50);
+    }
+    function tutupPanel(){ konten.classList.remove("luncur"); latar.classList.remove("buka"); setTimeout(()=>{latar.style.display="none";},300); }
+</script>
+{% endblock %}

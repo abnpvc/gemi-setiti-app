@@ -1,0 +1,834 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* 1. ANIMASI LACI LIPAT PANEL TURUN-BAWAH (ACCORDION) */
+    .laci-turun-panel {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease-out;
+        background: #0b0f19;
+        border-radius: 8px;
+        border: 0 solid #1f2937;
+        margin-bottom: 0;
+    }
+    .laci-turun-panel.terbuka {
+        max-height: 2000px;
+        border: 2px solid #1f2937;
+        border-top: 4px solid #ff7800;
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+
+    /* 2. ATURAN INPUT TEBAL RAMAH MATA CYLINDER ANTI-GHOSTING */
+    .laci-turun-panel label {
+        display: block;
+        color: #ff7800;
+        font-weight: 900;
+        font-size: 11px;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+        font-family: Arial, sans-serif;
+    }
+    .laci-turun-panel input, .laci-turun-panel select {
+        background: #111827 !important;
+        color: #ffffff !important;
+        border: 2px solid #1f2937 !important;
+        padding: 4px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 900;
+        box-sizing: border-box;
+        height: 32px;
+    }
+    .laci-turun-panel input:focus, .laci-turun-panel select:focus {
+        border-color: #ff7800 !important;
+        outline: none;
+        box-shadow: 0 0 6px rgba(255, 120, 0, 0.3);
+    }
+
+    /* ========================================================== */
+    /* MODIFIKASI GLOBAL: MEMPERTEBAL & MEWARNAI SCROLLBAR BAWAH TABEL */
+    /* ========================================================== */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 14px !important; /* Membuat batang scroll horizontal bawah tebal kokoh */
+    }
+    ::-webkit-scrollbar-track {
+        background: #070a12 !important; /* Latar belakang track hitam pekat redup */
+        border-radius: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #ff7800 !important; /* Batang penggeser berwarna oranye menyala tajam */
+        border-radius: 6px;
+        border: 2px solid #070a12;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #facc15 !important; /* Berubah menjadi kuning stabilo saat disentuh mouse */
+    }
+</style>
+
+<style>
+    /* 3. BUTTONS KONTROL PREMIUM LUXURY */
+    .btn-pemicu-laci { 
+        background: #ff7800; color: #000000; border: none; 
+        padding: 10px 20px; font-weight: 900; border-radius: 6px; 
+        cursor: pointer; font-size: 12px; text-transform: uppercase; 
+        box-shadow: 0 4px 10px rgba(255, 120, 0, 0.2); 
+    }
+    .btn-tambah-baris { 
+        background: #162235; color: #ffffff; border: 1px solid #ff7800; 
+        padding: 6px 12px; font-weight: 900; border-radius: 4px; 
+        font-size: 11px; cursor: pointer; text-transform: uppercase; 
+    }
+    .btn-simpan-transaksi { 
+        background: #34d399; color: #000000; border: none; 
+        padding: 12px 25px; font-weight: 900; border-radius: 6px; 
+        cursor: pointer; font-size: 12px; text-transform: uppercase; 
+        box-shadow: 0 4px 10px rgba(52, 211, 153, 0.2); 
+    }
+
+    /* 4. SUSUNAN BINGKAI TABEL INPUT HORIZONTAL 13 KOLOM */
+    .tabel-input-massal { 
+        width: 100%; border-collapse: collapse; 
+        font-size: 11px; text-align: center; color: #fff; 
+    }
+    .tabel-input-massal th { 
+        padding: 8px 5px; border: 1px solid #1f2937; 
+        background: #162235; color: #ffffff; 
+        font-weight: 900; text-transform: uppercase; font-size: 10.5px; 
+    }
+    .tabel-input-massal td { 
+        padding: 5px 4px; border: 1px solid #1f2937; background: #0b0f19; 
+    }
+
+    /* 5. TABEL REKAPITULASI VIEW DEPAN UTAMA */
+    .tabel-rekap-utama { 
+        width: 100%; border-collapse: collapse; 
+        font-size: 12px; text-align: center; color: #fff; 
+    }
+    .tabel-rekap-utama th { 
+        padding: 12px 10px; border: 1px solid #1f2937; 
+        background: #162235; color: #ffffff; 
+        font-weight: 900; text-transform: uppercase; font-size: 11px; 
+    }
+    .tabel-rekap-utama td { 
+        padding: 12px 10px; border: 1px solid #1f2937; 
+        background: #0b0f19; font-weight: 900; 
+        font-size: 13px; color: #f8fafc; 
+    }
+</style>
+
+<!-- JUDUL HALAMAN DEPAN UTAMA -->
+<div class="header-halaman" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-left: 4px solid #ff7800; padding-left: 15px;">
+    <div>
+        <span class="breadcrumb" style="color: #94a3b8; font-size: 12px; text-transform: uppercase;">Monitoring &gt;</span>
+        <h1 style="color: #ffffff; margin: 5px 0 0 0; font-size: 24px; font-weight: bold; letter-spacing: 0.5px; font-family: Arial, sans-serif;">LAPORAN PRODUKSI HARIAN SHIFT</h1>
+    </div>
+    <button type="button" class="btn-pemicu-laci" id="btnTeksLaci" onclick="saklarLaciTurunBawah()">➕ BUKA FORMULIR JURNAL SHIFT BARU</button>
+</div>
+
+<!-- CONTAINER FORMULIR LACI ACCORDION TURUN-BAWAH -->
+<div class="laci-turun-panel" id="panelLaciMewah">
+    <form id="formJurnalMassalCard" action="{{ url_for('transaksi_produksi_harian') }}" method="POST" onsubmit="kendaliLaciInput(false)">
+        
+        <!-- BLOK INFO TANGGAL & SHIFT KERJA -->
+        <div style="display: flex; gap: 20px; background: #162235; padding: 15px; border-radius: 6px; border: 1px solid #1f2937; margin-bottom: 15px;">
+            <div style="width: 180px;">
+                <label>🟥 TANGGAL PRODUKSI</label>
+                <input type="date" name="tanggal" required value="{{ tanggal_hari_ini }}" style="width: 100%;">
+            </div>
+            <div style="width: 250px;">
+                <label>🟢 PILIH SHIFT KERJA</label>
+                <select name="shift" required style="width: 100%; cursor: pointer;">
+                    <option value="SHIFT 1" selected>SHIFT 1 (PAGI - SORE)</option>
+                    <option value="SHIFT 2">SHIFT 2 (SORE - MALAM)</option>
+                    <option value="SHIFT 3">SHIFT 3 (MALAM - PAGI)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- HAMPARAN KEPALA KOLOM INPUT TABEL HORIZONTAL -->
+        <div style="background:#111827; border:1px solid #ff7800; border-radius:6px; padding:10px; margin-bottom:12px;">
+            <div style="color:#facc15; font-weight:900; font-size:11px; margin-bottom:6px;">📊 RINGKASAN MASAKAN PER MESIN (AUTO GROUPING)</div>
+            <div id="ringkasanMasakanMesin" style="color:#cbd5e1; font-size:11px; font-family:monospace;">Belum ada data mesin</div>
+            <div style="color:#64748b; font-size:10px; margin-top:4px;">💡 Jika 1 mesin produksi 10 tipe cuma butuh 3 masakan → isi <b>3</b> di baris pertama mesin itu, baris lain otomatis jadi <b>0</b> (ikut mesin). Sistem akan potong BB mixer hanya 3x, bukan 10x.</div>
+        </div>
+        <div style="overflow-x: auto; border: 1px solid #1f2937; border-radius: 6px; margin-bottom: 15px; background: #070a12;">
+            <table class="tabel-input-massal" id="tabelInputHorizontal">
+                <thead>
+                    <tr style="background: #162235; border-bottom: 2px solid #ff7800;">
+                        <th style="width: 50px;">NO MESIN</th>
+                        <th style="min-width: 190px; text-align: left; padding-left: 10px;">TIPE JADI</th>
+                        <th style="width: 60px;">UKURAN (M)</th>
+                        <th style="width: 130px; color: #facc15;">KODE TELUSUR FILM</th>
+                        <th style="width: 80px;">PANJANG AWAL</th>
+                        <th style="width: 85px; color: #34d399;">HASIL BAIK</th>
+                        <th style="width: 85px; color: #f87171;">RUSAK DNG FILM</th>
+                        <th style="width: 85px; color: #cbd5e1;">RUSAK TANPA FILM</th>
+                        <th style="width: 85px;">FILM TERPAKAI</th>
+                        <th style="width: 85px; color: #34d399;">SISA FILM</th>
+                        <th style="width: 60px; color: #facc15;">MASAKAN</th>
+                        <th style="width: 110px;">TIPE MASAKAN</th>
+                        <th style="width: 100px;">QC / OPERATOR</th>
+                        <th style="width: 35px;">AKSI</th>
+                    </tr>
+                </thead>
+                <tbody id="badanTabelMesinHorizontal"></tbody>
+            </table>
+        </div>
+        <!-- NAVIGASI ACTION TOMBOL BAWAH LACI PANEL -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #1f2937; padding-top: 15px;">
+            <button type="button" class="btn-tambah-baris" onclick="tambahBarisMesinHorizontal()">➕ Tambah Laporan Hasil Mesin Baru</button>
+            <button type="submit" class="btn-simpan-transaksi">💾 Simpan Semua Transaksi Shift Pemrosesan</button>
+        </div>
+    </form>
+</div>
+
+<!-- PANEL UTAMA DEPAN: KARTU HISTORIS JURNAL DAN FILTER AUDIT -->
+<div class="card" style="padding: 20px; background: #0b0f19; border-top: 4px solid #ff7800; border-radius: 8px; color: #fff; border: 1px solid #1f2937;">
+    
+    <!-- BARIS KOTAK INPUT FILTER TANGGAL DARI - SAMPAI -->
+    <form method="GET" action="{{ url_for('transaksi_produksi_harian') }}" 
+          style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; background: #162235; padding: 12px; border-radius: 6px; border: 1px solid #1f2937; align-items: flex-end;">
+        <div style="width: 140px;">
+            <label style="color: #cbd5e1; font-weight: 900; font-size: 10px; display: block; margin-bottom: 4px;">📅 DARI TANGGAL</label>
+            <input type="date" name="tgl_dari" value="{{ tgl_dari_val }}" style="width: 100%; height: 32px;">
+        </div>
+        <div style="width: 140px;">
+            <label style="color: #cbd5e1; font-weight: 900; font-size: 10px; display: block; margin-bottom: 4px;">📅 SAMPAI TANGGAL</label>
+            <input type="date" name="tgl_sampai" value="{{ tgl_sampai_val }}" style="width: 100%; height: 32px;">
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button type="submit" style="background: #ff7800; color: #000000; border: none; padding: 0 15px; font-weight: 900; border-radius: 4px; font-size: 11px; height: 32px; cursor: pointer; text-transform: uppercase;">🔍 CARI</button>
+            <a href="{{ url_for('transaksi_produksi_harian') }}" style="background: #1f2937; color: #cbd5e1; border: 1px solid #334155; padding: 8px 12px; font-weight: 900; border-radius: 4px; font-size: 11px; height: 14px; text-decoration: none; text-transform: uppercase; text-align: center;">🔄 RESET</a>
+            <button type="button" onclick="eksporJurnalKeExcel()" style="background: #107c41; color: #ffffff; border: none; padding: 0 12px; font-weight: 900; border-radius: 4px; font-size: 11px; height: 32px; cursor: pointer; text-transform: uppercase;">📊 EXCEL</button>
+            <button type="button" onclick="eksporJurnalKePDF()" style="background: #b91c1c; color: #ffffff; border: none; padding: 0 12px; font-weight: 900; border-radius: 4px; font-size: 11px; height: 32px; cursor: pointer; text-transform: uppercase;">📕 PDF</button>
+        </div>
+    </form>
+
+    <h3 style="margin: 0 0 15px 0; color: #ffffff; text-transform: uppercase; font-size: 14px; font-weight: 900; letter-spacing: 0.5px;">📜 JURNAL HISTORIS HASIL PRODUKSI</h3>
+        <!-- ========================================================== -->
+<!-- POTONGAN 1: KOTAK INPUT PENCARIAN PINTAR GLOBAL (HTML)     -->
+<!-- ========================================================== -->
+<div style="margin-bottom: 12px; display:flex; gap:8px; align-items:end; flex-wrap:wrap; background:#0b0f19; padding:10px; border-radius:6px; border:1px solid #1f2937;">
+    <div style="flex:1; min-width:220px;">
+        <label style="color: #ff7800; font-weight: 900; font-size: 10px; display: block; margin-bottom: 4px;">🔎 PENCARIAN</label>
+        <input type="text" id="kotakCariPintarJurnal" 
+               onkeyup="filterJurnalGabungan()" 
+               placeholder="Ketik TGL / ID / Nama / Rol / Operator..." 
+               style="width: 100%; height: 32px; background: #111827!important; 
+                      color: #fff!important; border: 2px solid #1f2937!important; 
+                      border-radius: 4px; padding: 5px 10px; font-weight: 900; font-size: 11px;">
+    </div>
+    <div style="width:120px;">
+        <label style="color: #94a3b8; font-weight: 900; font-size: 10px; display: block; margin-bottom: 4px;">SHIFT</label>
+        <select id="filterShift" onchange="filterJurnalGabungan()" style="width:100%; height:32px; background:#111827!important; color:#fff!important; border:2px solid #1f2937!important; border-radius:4px; font-weight:900; font-size:11px;">
+            <option value="">SEMUA SHIFT</option>
+            <option value="SHIFT 1">SHIFT 1</option>
+            <option value="SHIFT 2">SHIFT 2</option>
+            <option value="SHIFT 3">SHIFT 3</option>
+        </select>
+    </div>
+    <div style="width:110px;">
+        <label style="color: #94a3b8; font-weight: 900; font-size: 10px; display: block; margin-bottom: 4px;">NO MESIN</label>
+        <select id="filterMesin" onchange="filterJurnalGabungan()" style="width:100%; height:32px; background:#111827!important; color:#fff!important; border:2px solid #1f2937!important; border-radius:4px; font-weight:900; font-size:11px;">
+            <option value="">SEMUA MESIN</option>
+            <option value="01">MESIN 01</option>
+            <option value="02">MESIN 02</option>
+            <option value="03">MESIN 03</option>
+            <option value="04">MESIN 04</option>
+                        <option value="04">MESIN 05</option>
+                        <option value="04">MESIN 06</option>
+                        <option value="04">MESIN 07</option>
+                        <option value="04">MESIN 08</option>
+                        <option value="04">MESIN 09</option>
+                        <option value="04">MESIN 10</option>
+        </select>
+    </div>
+    <div style="width:90px;">
+        <button onclick="resetFilterJurnal()" style="width:100%; height:32px; background:#1f2937; color:#fff; border:1px solid #374151; border-radius:4px; font-weight:900; font-size:10px; cursor:pointer;">RESET</button>
+    </div>
+</div>
+
+    <div style="overflow-x: auto; max-height: 500px; overflow-y: auto; border-radius: 6px; border: 1px solid #1f2937;">
+        <table class="tabel-rekap-utama" id="tabelRiwayatProduksi">
+            <!-- REVISI CERDAS: KEPALA TABEL INPUT HARIZONTAL DIAM DI TEMPAT -->
+<thead>
+    <tr style="background: #162235; border-bottom: 2px solid #ff7800; position: sticky; top: 0; z-index: 10;">
+        <th style="width: 90px;">TGL</th>
+        <th style="width: 75px;">SHIFT</th>
+        <th style="width: 50px;">NO MESIN</th>
+        <th style="width: 90px; color: #facc15;">ID BARANG</th>
+        <th style="min-width: 190px; text-align: left; padding-left: 10px;">NAMA BARANG</th>
+        <th style="width: 60px;">UKURAN (M)</th>
+        <th style="width: 130px; color: #facc15;">KODE TELUSUR FILM</th>
+        <th style="width: 80px;">PANJANG AWAL</th>
+        <th style="width: 85px; color: #34d399;">HASIL BAIK</th>
+        <th style="width: 85px; color: #f87171;">RUSAK DNG FILM</th>
+        <th style="width: 85px; color: #cbd5e1;">RUSAK TANPA FILM</th>
+        <th style="width: 85px;">FILM TERPAKAI</th>
+        <th style="width: 85px; color: #34d399;">SISA FILM</th>
+        <th style="width: 60px; color: #facc15;">MASAKAN</th>
+        <th style="width: 110px;">TIPE MASAKAN</th>
+        <th style="width: 100px;">QC / OPERATOR</th>
+        <th style="width: 35px;">AKSI</th>
+    </tr>
+</thead>
+
+            <tbody>
+                <!-- ==============================================================================
+     PERBAIKAN TAHAP 2: SINKRONISASI 14 KOLOM UTUH PADA BADAN TABEL HISTORIS
+     ============================================================================== -->
+<!-- ==============================================================================
+     FIX JURNAL MANUAL MATCHING: SOLUSI KEDAP EROR RELASI DATABASE (HTML)
+     ============================================================================== -->
+<!-- ==============================================================================
+     FIX DISPLAY UKURAN: EKSTRAK INDEKS ARRAY KETERANGAN SECARA VALID (HTML)
+     ============================================================================== -->
+{% for p in produksi_list %}
+  {% set info_keterangan = p.keterangan.split('|') if p.keterangan else ['M-01', 'QC: -', 'LEN: 4'] %}
+  {% set msn_aktif = info_keterangan[0].replace('M-', '').strip() if info_keterangan|length > 0 else '1' %}
+  {% set op_qc = info_keterangan[1].replace('QC:', '').strip() if info_keterangan|length > 1 else '-' %}
+  
+  {# Ambil indeks ketiga [2] secara spesifik lalu bersihkan kata LEN: #}
+  {% set teks_len_mentah = info_keterangan[2] if info_keterangan|length > 2 else 'LEN: 4' %}
+  {% set ukuran_display = teks_len_mentah.replace('LEN:', '').strip() %}
+  {% set master_bng = p.barang_jadi if p.barang_jadi else p.produk %}
+  
+  {# Hitung total film terpakai - FILTER LIS POLOSAN X2A DLL = 0M #}
+  {% set nama_upper = master_bng.nama_barang.upper() if master_bng and master_bng.nama_barang else "" %}
+  {% set is_lis = "LIS" in nama_upper %}
+  {% set lis_pakai_film_list = ["X2E","X2H","X2J","X2K","X2G","X2I","X2P","X2O","X2C","X2D","X2F","X2M"] %}
+  {% set ns = namespace(pakai=false) %}
+  {% if is_lis %}
+    {% for kode in lis_pakai_film_list %}
+      {% if kode in nama_upper %}
+        {% set ns.pakai = true %}
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    {% set ns.pakai = true %}
+  {% endif %}
+  {% if is_lis and not ns.pakai %}
+    {% set total_film_kali = 0 %}
+  {% else %}
+    {% set total_film_kali = (p.jumlah_produk_jadi + p.jumlah_produk_rusak_film) * (ukuran_display|float) %}
+  {% endif %}
+  
+  <tr style="border-bottom: 1px solid #1f2937; background: #0b0f19;" onmouseover="this.style.background='#162235'" onmouseout="this.style.background='#0b0f19'">
+    <td style="color: #cbd5e1; font-family: monospace; font-size: 11px;">{{ p.tanggal.strftime('%d/%m/%y') if p.tanggal else '-' }}</td>
+    <td style="color: {% if '1' in p.shift %}#34d399{% elif '2' in p.shift %}#facc15{% else %}#60a5fa{% endif %}; font-weight: 900; font-size: 11px;">{{ p.shift or '-' }}</td>
+    <td style="color: #ff7800; font-family: monospace; font-weight: 900;">{{ msn_aktif }}</td>
+    <td style="color: #facc15; font-family: monospace; font-weight: 900; font-size: 12px;">{{ p.id_barang_jadi }}</td>
+    <td style="text-align: left; padding-left: 10px;">
+      {% if master_bng %}
+        <div style="color:#f8fafc; font-size:13px; font-weight:900;">{{ master_bng.nama_barang }}</div>
+        <div style="font-size:9px; color:#64748b; font-family:monospace; margin-top:2px;">{% if master_bng.tipe_film %}FILM: {{ master_bng.tipe_film }}{% else %}-{% endif %}</div>
+      {% else %}
+        <div style="color:#f87171; font-size:12px; font-weight:900;">{{ p.id_barang_jadi }} (MASTER HILANG)</div>
+        <div style="font-size:9px; color:#94a3b8; font-family:monospace;">ID: {{ p.id_barang_jadi }}</div>
+      {% endif %}
+    </td>
+    
+    <!-- 3. UKURAN BARANG (SEKARANG DINAMIS MEMBACA INDEKS LEN FISIK) -->
+    <td style="color: #cbd5e1; font-weight: 900;">{{ ukuran_display|int }}M</td>
+
+      <!-- 4. KODE TELUSUR FILM -->
+  <td style="color: #facc15; font-family: monospace; font-size: 11px; font-weight: 900;">{{ p.kode_telusur_film if p.kode_telusur_film else '-' }}</td>
+  
+  <!-- 5. PANJANG AWAL FILM (SEKARANG MUNCUL AKURAT DARI DATABASE GUDANG) -->
+  <td style="color: #cbd5e1; font-family: monospace; font-weight: 900;">
+    {{ p.panjang_awal_gudang if p.panjang_awal_gudang > 0 else '-' }}M
+  </td>
+  
+  <!-- 6. HASIL BAIK -->
+  <td style="color: #34d399; font-weight: 900;">{{ p.jumlah_produk_jadi }} <span style="color:#64748b; font-size:10px;">{{ master_bng.satuan|default('LBR') if master_bng else 'LBR' }}</span></td>
+  <!-- 7. RUSAK DENGAN FILM -->
+  <td style="color: #f87171; font-weight: 900;">{{ p.jumlah_produk_rusak_film }} <span style="color:#64748b; font-size:9px;">{{ master_bng.satuan|default('LBR') if master_bng else 'LBR' }}</span></td>
+  <!-- 8. RUSAK TANPA FILM -->
+  <td style="color: #cbd5e1; font-weight: 900;">{{ p.jumlah_produk_rusak_tanpa_film }} <span style="color:#64748b; font-size:9px;">{{ master_bng.satuan|default('LBR') if master_bng else 'LBR' }}</span></td>
+  <!-- 9. FILM TERPAKAI (METER) -->
+  <td style="color: #ffffff; font-family: monospace; font-weight: 900;">{{ total_film_kali|int }}M</td>
+  
+  <!-- 10. SISA FILM (SEKARANG MUNCUL AKURAT DARI DATABASE GUDANG) -->
+  <td style="color: #34d399; font-family: monospace; font-weight: 900;">
+    {{ p.panjang_sisa_gudang if p.panjang_sisa_gudang > 0 else '-' }}M
+  </td>
+
+    <!-- 11. MASAKAN (BATCH) -->
+    <td style="color: #facc15; font-family: monospace; font-weight: 900;">{{ p.jumlah_batch }}</td>
+    <!-- 12. TIPE MASAKAN / ADONAN -->
+    <td style="color: #cbd5e1; font-size: 11px; font-weight: 900;">{{ p.tipe_adonan }}</td>
+    <!-- 13. QC / OPERATOR -->
+    <td style="color: #94a3b8; font-size: 11px; font-weight: 900;">{{ op_qc }}</td>
+      <!-- 14. AKSI -->
+  <td>
+    <form action="{{ url_for('hapus_produksi_harian', id_prod=p.id_produksi) }}" method="POST" 
+          onsubmit="return confirm('⚠️ AWAS SELISIH STOK!\nApakah Anda yakin ingin MENGHAPUS baris jurnal ini?\nSistem akan menarik kembali hasil produk dan mengembalikan gulungan film ke rak gudang hulu secara otomatis.');">
+      <button type="submit" style="background: #b91c1c; color: #ffffff; border: 1px solid #f87171; padding: 4px 8px; border-radius: 4px; font-weight: 900; font-size: 10px; cursor: pointer; text-transform: uppercase;">
+        🗑️ HAPUS
+      </button>
+    </form>
+  </td>
+</tr>
+{% else %}
+<tr>
+  <td colspan="17" style="padding: 40px; color: #64748b; font-style: italic; background: #0b0f19; font-weight: 900;">
+    📭 Belum ada riwayat jurnal produksi harian yang tercatat di database hulu Gemi Setiti.
+  </td>
+</tr>
+{% endfor %}
+
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="wadahTemplateSKUIsolasi" style="display: none;">
+    <select id="templateSKUBarangJadi">
+        <option value="">- Ketik Plafon / LIS -</option>
+        {% for prd in semua_produk %}
+        <!-- Trik Cerdas: ID dimasukkan ke data-id, Nama murni dimasukkan ke value teks -->
+        <option value="{{ prd.nama_barang }}" data-id="{{ prd.id_barang_jadi }}" data-film="{{ prd.tipe_film or '' }}">{{ prd.id_barang_jadi }} - {{ prd.nama_barang }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+
+<script>
+    var counterBarisMesin = 0;
+    var penyimpananLokalDataRol = {};
+
+    // 1. FUNGSI SAKLAR PANELS ACCORDION TURUN-BAWAH
+    function saklarLaciTurunBawah() {
+        var panel = document.getElementById("panelLaciMewah");
+        var btn = document.getElementById("btnTeksLaci");
+        var badan = document.getElementById("badanTabelMesinHorizontal");
+        if (panel.classList.contains("terbuka")) {
+            panel.classList.remove("terbuka");
+            btn.innerHTML = "➕ BUKA FORMULIR JURNAL SHIFT BARU";
+        } else {
+            panel.classList.add("terbuka");
+            btn.innerHTML = "✕ TUTUP FORMULIR JURNAL SHIFT";
+            if (badan.children.length === 0) { tambahBarisMesinHorizontal(); }
+        }
+    }
+
+    function kendaliLaciInput(statusTerbuka) {
+        var panel = document.getElementById("panelLaciMewah");
+        if (!statusTerbuka && panel) { panel.classList.remove("terbuka"); }
+    }
+
+    // 2. FUNGSI GENERATOR BARIS HORIZONTAL JURNAL MASAL - FINAL FIX MASAKAN 0 AUTO
+    function tambahBarisMesinHorizontal() {
+    var badanTabel = document.getElementById("badanTabelMesinHorizontal");
+    var indeks = counterBarisMesin; counterBarisMesin++;
+    var tr = document.createElement("tr");
+    tr.id = "barisHorizontalKe_" + indeks;
+    tr.style.borderBottom = "1px solid #1f2937";
+
+    var opsiHTML = "";
+    var opsiTemplate = document.querySelectorAll("#templateSKUBarangJadi option");
+    opsiTemplate.forEach(function(opt) {
+        if(opt.value !== "") {
+            opsiHTML += '<option value="' + opt.value + '" data-id="' + opt.getAttribute("data-id") + '" data-film="' + opt.getAttribute("data-film") + '">ID: ' + opt.getAttribute("data-id") + '</option>';
+        }
+    });
+
+    tr.innerHTML = 
+        '<td><select name="no_mesin[]" id="mesin_' + indeks + '" required style="width:55px; text-align:center;" onchange="updateMasakanPerMesin()"><option value="M-01">1</option><option value="M-02">2</option><option value="M-03">3</option><option value="M-04">4</option><option value="M-05">5</option><option value="M-06">6</option><option value="M-07">7</option><option value="M-08">8</option><option value="M-09">9</option><option value="M-10">10</option></select></td>' +
+        '<td style="text-align:left;">' +
+            '<input list="listSKUCerdas_' + indeks + '" id="pencariSKU_' + indeks + '" class="form-control" placeholder="🔍 Ketik nama barang..." required autocomplete="off" oninput="sinkronisasiIdSKUDinamis(' + indeks + ')" style="width:100%; height:24px; font-size:12px; font-weight:900; text-transform: uppercase;">' +
+            '<input type="hidden" name="id_barang_jadi[]" id="pilihSKU_' + indeks + '" required>' +
+            '<datalist id="listSKUCerdas_' + indeks + '">' + opsiHTML + '</datalist>' +
+        '</td>' +
+        '<td>' +
+            '<div style="display:flex; gap:3px; align-items:center;">' +
+                '<select name="panjang_ukuran_select[]" id="ukuran_' + indeks + '" onchange="cekUkuranCustom(' + indeks + ')" required style="width:65px; text-align:center; font-weight:900; background:#111827; color:#fff; border:2px solid #1f2937; border-radius:4px; height:32px;">' +
+                    '<option value="3">3M</option><option value="4" selected>4M</option><option value="5">5M</option><option value="6">6M</option><option value="custom">REQUEST</option>' +
+                '</select>' +
+                '<input type="hidden" name="panjang_ukuran[]" id="ukuranHidden_' + indeks + '" value="4">' +
+                '<input type="number" id="ukuranCustom_' + indeks + '" step="0.01" min="0.1" placeholder="3.5" style="width:60px; display:none; background:#1f1111!important; border:2px solid #fb923c!important; color:#fff!important; text-align:center; font-weight:900; height:32px; border-radius:4px;" oninput="hitungKalkulatorFilmHorisontal(' + indeks + ')">' +
+            '</div>' +
+        '</td>' +
+        '<td><input type="text" name="kode_telusur_film[]" id="pilihTelusur_' + indeks + '" list="listDinamisHoriz_' + indeks + '" oninput="tarikPanjangAwalRol(' + indeks + ')" placeholder="No Rol" style="font-family:monospace; color:#facc15!important; font-size:11px;" autocomplete="off" disabled><datalist id="listDinamisHoriz_' + indeks + '"></datalist></td>' +
+        '<td><input type="number" id="panjangAwal_' + indeks + '" readonly value="0" style="background:#162235!important; text-align:center; color:#cbd5e1!important;"></td>' +
+        '<td><div style="display:flex; align-items:center; background:#111827; border:2px solid #1f2937; border-radius:4px; padding-right:5px;"><input type="number" name="jumlah_produk_jadi[]" id="baik_' + indeks + '" min="0" value="0" required style="border:none!important; text-align:center; color:#34d399!important;" oninput="hitungKalkulatorFilmHorisontal(' + indeks + ')" onfocus="this.select()"><span style="color:#64748b; font-size:10px; font-weight:900;">Lbr</span></div></td>' +
+        '<td><input type="number" name="jumlah_produk_rusak_film[]" id="rusakFilm_' + indeks + '" min="0" value="0" required style="text-align:center; color:#f87171!important; border-color:#f87171!important;" oninput="hitungKalkulatorFilmHorisontal(' + indeks + ')" onfocus="this.select()"></td>' +
+        '<td><input type="number" name="jumlah_produk_rusak_tanpa_film[]" id="rusakTanpaFilm_' + indeks + '" min="0" value="0" required style="text-align:center; color:#cbd5e1!important;" onfocus="this.select()"></td>' +
+        '<td><input type="number" name="film_terpakai[]" id="totalFilm_' + indeks + '" readonly step="any" value="0" style="background:#162235!important; text-align:center; font-weight:900;"></td>' +
+        '<td><input type="number" id="sisaFilm_' + indeks + '" readonly value="0" style="background:#162235!important; text-align:center; color:#34d399!important; font-weight:900;"></td>' +
+        '<td><input type="number" name="jumlah_batch[]" id="batch_' + indeks + '" min="0" value="1" required style="text-align:center;" onfocus="this.select()" oninput="updateMasakanPerMesin()" onchange="updateMasakanPerMesin()"></td>' +
+        '<td><select name="tipe_adonan[]" id="adonan_' + indeks + '" required style="font-size:11px;" onchange="updateMasakanPerMesin()"><option value="PLAFON COKLAT">PLAFON COKLAT</option><option value="PLAFON PUTIH">PLAFON PUTIH</option><option value="LIS COKLAT">LIS COKLAT</option><option value="LIS PUTIH">LIS PUTIH</option><option value="TRIAL">TRIAL</option><option value="COMPOUND">COMPOUND</option></select></td>' +
+        '<td><input type="text" name="keterangan_baris[]" oninput="this.value = this.value.toUpperCase()" placeholder="OPERATOR" style="font-size:11px;"></td>' +
+        '<td><button type="button" onclick="document.getElementById(\'barisHorizontalKe_' + indeks + '\').remove(); setTimeout(updateMasakanPerMesin,100)" style="background:#7f1d1d; color:#f87171; border:1px solid #f87171; padding:3px 6px; border-radius:4px; cursor:pointer; font-weight:900;">✕</button></td>';
+
+    badanTabel.appendChild(tr);
+    setTimeout(updateMasakanPerMesin, 50);
+}
+
+function updateMasakanPerMesin() {
+    var badan = document.getElementById("badanTabelMesinHorizontal");
+    var ringkas = document.getElementById("ringkasanMasakanMesin");
+    if (!badan) return;
+    var baris = badan.getElementsByTagName("tr");
+    var grouped = {};
+    for (var i=0;i<baris.length;i++) {
+        var selMesin = baris[i].querySelector('select[name="no_mesin[]"]');
+        var selAdonan = baris[i].querySelector('select[name="tipe_adonan[]"]');
+        var inpBatch = baris[i].querySelector('input[name="jumlah_batch[]"]');
+        if (!selMesin || !selAdonan || !inpBatch) continue;
+        var key = selMesin.value + "|" + selAdonan.value;
+        if (!grouped[key]) grouped[key] = {total:0, count:0, mesin:selMesin.value, adonan:selAdonan.value};
+        var val = parseInt(inpBatch.value||0);
+        if (isNaN(val)) val=0;
+        grouped[key].total += val;
+        grouped[key].count += 1;
+    }
+    var alreadySeen = {};
+    for (var i=0;i<baris.length;i++) {
+        var selMesin = baris[i].querySelector('select[name="no_mesin[]"]');
+        var selAdonan = baris[i].querySelector('select[name="tipe_adonan[]"]');
+        var inpBatch = baris[i].querySelector('input[name="jumlah_batch[]"]');
+        if (!selMesin || !selAdonan || !inpBatch) continue;
+        var key = selMesin.value + "|" + selAdonan.value;
+        if (!alreadySeen[key]) {
+            alreadySeen[key]=true;
+            inpBatch.style.background = "#111827";
+            inpBatch.style.color = "#facc15";
+            inpBatch.style.border = "2px solid #1f2937";
+            inpBatch.title = "Masakan utama untuk "+key+" - isi total masakan disini";
+            inpBatch.readOnly = false;
+        } else {
+            // AUTO SET 0 untuk duplikat biar tidak error required + tidak jadi 10 masakan
+            if (inpBatch.value === "" || parseInt(inpBatch.value) > 0) {
+                // jangan auto 0 jika user sedang ketik, tapi jika sudah ada value >0, set 0
+                if (inpBatch.value !== "" && parseInt(inpBatch.value) !== 0) {
+                    // biarkan warning dulu, tapi kita set 0 otomatis setelah 500ms
+                    inpBatch.style.background = "#7f1d1d";
+                    inpBatch.style.color = "#f87171";
+                    inpBatch.style.border = "2px solid #f87171";
+                    inpBatch.title = "DUPLIKAT MESIN "+selMesin.value+" - otomatis jadi 0. Isi 3 di baris pertama untuk 10 tipe.";
+                    // Auto 0 untuk cegah error Harap isi bidang ini!
+                    (function(inp){ setTimeout(function(){ if(parseInt(inp.value)>0){ inp.value=0; updateMasakanPerMesin(); } }, 800); })(inpBatch);
+                }
+            }
+            if (inpBatch.value === "") {
+                inpBatch.value = 0;
+            }
+        }
+    }
+    if (ringkas) {
+        var html = "";
+        var keys = Object.keys(grouped);
+        if (keys.length===0) { ringkas.innerHTML="Belum ada data mesin"; return; }
+        for (var k=0;k<keys.length;k++) {
+            var g = grouped[keys[k]];
+            html += '<span style="background:#162235; border:1px solid #1f2937; padding:3px 8px; border-radius:4px; margin-right:6px; display:inline-block; margin-bottom:4px;">'+g.mesin+' ('+g.adonan+'): <b style="color:#facc15;">'+g.total+' masakan</b> untuk '+g.count+' tipe</span>';
+        }
+        ringkas.innerHTML = html;
+    }
+}
+
+function sinkronisasiIdSKUDinamis(indeks) {
+    var inputKetik = document.getElementById("pencariSKU_" + indeks);
+    var hiddenInputId = document.getElementById("pilihSKU_" + indeks);
+    var datalist = document.getElementById("listSKUCerdas_" + indeks);
+    var options = datalist.getElementsByTagName("option");
+    
+    hiddenInputId.value = ""; // Bersihkan data pelacak awal
+    hiddenInputId.removeAttribute("data-film");
+    
+    // Bersihkan ketikan teks admin menjadi huruf besar kapital murni
+    var nilaiKetikBersih = inputKetik.value.toUpperCase().trim();
+    
+    if (nilaiKetikBersih === "") {
+        pemicuRadarFilmHorisontal(indeks);
+        return;
+    }
+    
+    for (var i = 0; i < options.length; i++) {
+        var namaBarangDb = options[i].value.toUpperCase().trim();
+        var idBarangDb = options[i].getAttribute("data-id").toUpperCase().trim();
+        
+        // JALUR PINTAR MULTI-MATCHING: Loloskan jika admin mengetik nama murni ATAU kode SKU-nya
+        if (namaBarangDb === nilaiKetikBersih || idBarangDb === nilaiKetikBersih) {
+            
+            // 1. Kunci ID asli (misal: Y-01) ke hidden input siluman untuk Python app.py
+            hiddenInputId.value = idBarangDb;
+            
+            // 2. Ambil kode spesifikasi motif film terkait (misal: PUTIH GLOSSY atau NP-29)
+            var motifFilmAsli = (options[i].getAttribute("data-film") || "").toUpperCase().trim();
+            hiddenInputId.setAttribute("data-film", motifFilmAsli);
+            
+            // 3. Buka gembok dan nyalakan radar pelacak stok nomor rol di gudang hulu
+            pemicuRadarFilmHorisontal(indeks);
+            break;
+        }
+    }
+}
+// ==============================================================================
+// FIX ENGINE: API FETCH RADAR PELACAK SERI ROL FILM AKTIF GUDANG HULU (HTML)
+// ==============================================================================
+function pemicuRadarFilmHorisontal(indeks) {
+    var hiddenInputId = document.getElementById("pilihSKU_" + indeks);
+    var idBahanFilm = hiddenInputId ? hiddenInputId.getAttribute("data-film") : '';
+    var inputTelusur = document.getElementById("pilihTelusur_" + indeks);
+    var datalistRol = document.getElementById("listDinamisHoriz_" + indeks);
+    var inputAwal = document.getElementById("panjangAwal_" + indeks);
+
+    // Reset total isi wadah lama agar tidak memicu distorsi data logistik
+    inputTelusur.value = "";
+    inputTelusur.disabled = true;
+    inputAwal.value = 0;
+    datalistRol.innerHTML = "";
+
+    // Jika SKU tersebut terbukti memiliki spesifikasi motif film gulungan
+    if (idBahanFilm && idBahanFilm.trim() !== "" && idBahanFilm !== "POLOSAN") {
+        inputTelusur.disabled = false;
+        inputTelusur.placeholder = "Ketik No Rol...";
+
+        // Proteksi enkripsi spasi nama jenis film agar rute URL API tidak pecah
+        fetch('/api/get-rol-tersedia/' + encodeURIComponent(idBahanFilm.toUpperCase().trim()))
+            .then(response => response.json())
+            .then(data => {
+                datalistRol.innerHTML = ""; 
+                if (data.rols && data.rols.length > 0) {
+                    data.rols.forEach(rol => {
+                        var opsi = document.createElement("option");
+                        opsi.value = rol.kode_telusur.toUpperCase().trim();
+                        opsi.label = "Sisa: " + Math.round(rol.panjang_sisa) + " M";
+                        datalistRol.appendChild(opsi);
+                        
+                        // Kunci sisa meteran ke penyimpanan lokal virtual
+                        penyimpananLokalDataRol[rol.kode_telusur.toUpperCase().trim()] = rol.panjang_sisa;
+                    });
+                } else {
+                    inputTelusur.placeholder = "⚠️ STOK HABIS";
+                }
+            })
+            .catch(err => {
+                console.error("Gagal memproses penarikan radar rol film: " + err);
+            });
+    } else {
+        inputTelusur.placeholder = "POLOSAN";
+    }
+    hitungKalkulatorFilmHorisontal(indeks);
+}
+// ==============================================================================
+// PERBAIKAN FINAL: ENGINE KALKULATOR RUMUS OTOMATISASI METERAN FILM (HTML) - FILTER LIS POLOSAN X2A
+// ==============================================================================
+
+function cekUkuranCustom(indeks){
+    var sel = document.getElementById("ukuran_" + indeks);
+    var custom = document.getElementById("ukuranCustom_" + indeks);
+    var hidden = document.getElementById("ukuranHidden_" + indeks);
+    if(!sel) return;
+    if(sel.value === 'custom'){
+        if(custom){ custom.style.display='block'; custom.required=true; custom.focus(); }
+        if(hidden) hidden.value = parseFloat(custom ? custom.value : 0) || 0;
+    } else {
+        if(custom){ custom.style.display='none'; custom.required=false; }
+        if(hidden) hidden.value = parseFloat(sel.value || 0);
+    }
+    hitungKalkulatorFilmHorisontal(indeks);
+}
+
+function hitungKalkulatorFilmHorisontal(indeks) {
+    var hiddenInputId = document.getElementById("pilihSKU_" + indeks);
+    var idBahanFilm = hiddenInputId ? hiddenInputId.getAttribute("data-film") : '';
+    var inputNamaSKU = document.getElementById("pencariSKU_" + indeks);
+    var namaUpper = inputNamaSKU ? inputNamaSKU.value.toUpperCase() : '';
+    
+    var selUkuran = document.getElementById("ukuran_" + indeks);
+    var customUkuran = document.getElementById("ukuranCustom_" + indeks);
+    var hiddenUkuran = document.getElementById("ukuranHidden_" + indeks);
+    var panjangM = 4;
+    if (selUkuran) {
+        if (selUkuran.value === 'custom' && customUkuran) {
+            panjangM = parseFloat(customUkuran.value || 0);
+        } else {
+            panjangM = parseFloat(selUkuran.value || 0);
+        }
+    }
+    if (hiddenUkuran) hiddenUkuran.value = panjangM;
+
+    var btgBaik = parseFloat(document.getElementById("baik_" + indeks).value || 0);
+    var btgRusakFilm = parseFloat(document.getElementById("rusakFilm_" + indeks).value || 0);
+    var inputAwal = parseFloat(document.getElementById("panjangAwal_" + indeks).value || 0);
+    
+    var inputTerpakai = document.getElementById("totalFilm_" + indeks);
+    var inputSisa = document.getElementById("sisaFilm_" + indeks);
+
+    // FILTER: LIS YANG PAKAI FILM CUMA 12 TIPE INI, X2A DLL POLOSAN = 0M
+    var LIS_PAKAI_FILM = ["X2E","X2H","X2J","X2K","X2G","X2I","X2P","X2O","X2C","X2D","X2F","X2M"];
+    var isLis = namaUpper.includes("LIS");
+    if (isLis) {
+        var pakai = LIS_PAKAI_FILM.some(function(k){ return namaUpper.includes(k); });
+        if (!pakai) {
+            inputTerpakai.value = 0;
+            inputSisa.value = 0;
+            return;
+        }
+    }
+
+    // Jika produk merupakan tipe polosan tanpa membutuhkan balutan rol film
+    if (!idBahanFilm || idBahanFilm.trim() === "" || idBahanFilm === "POLOSAN" || idBahanFilm === "0") {
+        inputTerpakai.value = 0;
+        inputSisa.value = 0;
+        return;
+    }
+
+    // FORMULASI: Total Meter Terpakai = (Batang Hasil Baik + Rusak Film) x Ukuran Panjang Meter SKU
+    var totalTerpakai = (btgBaik + btgRusakFilm) * panjangM;
+    inputTerpakai.value = Math.round(totalTerpakai);
+
+    // Hitung sisa mutasi gulungan fisik di rak penyimpanan gudang
+    if (inputAwal > 0) {
+        var sisaPerkiraan = inputAwal - totalTerpakai;
+        inputSisa.value = sisaPerkiraan < 0 ? 0 : Math.round(sisaPerkiraan);
+    } else {
+        inputSisa.value = 0;
+    }
+}
+
+    // ==============================================================================
+// PERBAIKAN BAGIAN 2: ENGINE EKSPOR EXCEL POLOSAN KEDAP GAYA GELAP (HTML)
+// ==============================================================================
+function eksporJurnalKeExcel() {
+    var tabelAsli = document.getElementById("tabelRiwayatProduksi");
+    if (!tabelAsli) {
+        alert("⚠️ Tabel data 15 kolom tidak ditemukan di layar!");
+        return;
+    }
+    
+    // Kloning tabel secara virtual agar manipulasi gaya tidak merusak layar asli
+    var tabelKloning = tabelAsli.cloneNode(true);
+    
+    // Bersihkan warna gelap pada baris dan sel tabel kloningan
+    var semuaBaris = tabelKloning.getElementsByTagName("tr");
+    for (var i = 0; i < semuaBaris.length; i++) {
+        semuaBaris[i].style.background = "#ffffff";
+        semuaBaris[i].style.color = "#000000";
+        
+        var semuaSel = semuaBaris[i].querySelectorAll("th, td");
+        for (var j = 0; j < semuaSel.length; j++) {
+            semuaSel[j].style.background = "#ffffff";
+            semuaSel[j].style.color = "#000000";
+            semuaSel[j].style.border = "1px solid #000000";
+        }
+    }
+    
+    var HTMLTabelUtah = tabelKloning.outerHTML;
+    var templateExcel = '<html xmlns:o="urn:schemas-microsoft-com:office:office" ' +
+        'xmlns:x="urn:schemas-microsoft-com:office:excel" ' + 'xmlns="http://w3.org">' +
+        '<head><meta charset="utf-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook>' +
+        '<x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Jurnal Produksi</x:Name>' +
+        '<x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>' +
+        '</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml>' +
+        '<![endif]--></head><body>' + HTMLTabelUtah + '</body></html>';
+        
+    var tautanUnduh = document.createElement("a");
+    var blobExcel = new Blob([templateExcel], { type: "application/vnd.ms-excel" });
+    tautanUnduh.href = URL.createObjectURL(blobExcel);
+    tautanUnduh.target = '_blank';
+    tautanUnduh.download = 'Jurnal_Produksi_17Kolom_TGL_SHIFT_Gemi_Setiti.xls';
+    tautanUnduh.click();
+}
+
+        // ==========================================================
+    // POTONGAN 2: REVISI PREVIEW PDF BISA DILIHAT DAHULU (HTML)
+    // ==========================================================
+    // ==============================================================================
+// PERBAIKAN BAGIAN 1: ENGINE PREVIEW PDF POLOSAN RAMAH TINTA PRINTER (HTML)
+// ==============================================================================
+function eksporJurnalKePDF() {
+    var tabel = document.getElementById("tabelRiwayatProduksi");
+    if (!tabel) {
+        alert("⚠️ Tabel data 15 kolom tidak ditemukan di layar!");
+        return;
+    }
+    
+    // Membuka tab jendela virtual baru di browser Anda
+    var jendelaCetak = window.open('', '_blank', 'height=750,width=1000');
+    jendelaCetak.document.write('<html><head><title>Pratinjau Jurnal Produksi</title><style>');
+    
+    // SUNTIKAN GAYA CSS POLOSAN: Memaksa warna latar putih murni dan teks hitam
+    jendelaCetak.document.write('body { font-family: Arial, sans-serif; padding: 25px; color: #000; background: #fff; }');
+    jendelaCetak.document.write('h2 { text-align: center; text-transform: uppercase; margin-bottom: 5px; }');
+    jendelaCetak.document.write('.sub { text-align: center; font-size: 12px; color: #555; margin-bottom: 25px; }');
+    jendelaCetak.document.write('table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; background: #fff!important; color: #000!important; }');
+    jendelaCetak.document.write('th, td { border: 1px solid #000!important; padding: 6px 4px; text-align: center; font-weight: bold!important; background: #fff!important; color: #000!important; }');
+    jendelaCetak.document.write('th { background: #f2f2f2!important; font-size: 10.5px; }');
+    jendelaCetak.document.write('.no-print { text-align: right; margin-bottom: 15px; }');
+    jendelaCetak.document.write('.btn-print { background: #ff7800; color:#000; border:none; padding:8px 16px; font-weight:900; border-radius:4px; cursor:pointer; font-size:12px; }');
+    jendelaCetak.document.write('</style></head><body>');
+    
+    jendelaCetak.document.write('<div class="no-print"><button class="btn-print" onclick="window.print()">🖨️ CETAK / SIMPAN SEBAGAI PDF</button></div>');
+    jendelaCetak.document.write('<h2>📜 JURNAL HISTORIS HASIL PRODUKSI SHIFT MESIN</h2>');
+    jendelaCetak.document.write('<div class="sub">Data Dokumen Rekapitulasi Aliran Produksi Hulu Industri Gemi Setiti</div>');
+    
+    // Menyemprotkan struktur tabel ke tab baru
+    jendelaCetak.document.write(tabel.outerHTML);
+    jendelaCetak.document.write('</body></html>');
+    jendelaCetak.document.close();
+    jendelaCetak.focus();
+}
+
+    // ==========================================================
+    // POTONGAN 2: ENGINE LIVE SEARCH FILTER MULTI-KOLOM (HTML)
+    // ==========================================================
+    function filterJurnalGabungan() {
+        var input = document.getElementById("kotakCariPintarJurnal");
+        var filterText = input.value.toUpperCase();
+        var filterShift = document.getElementById("filterShift").value.toUpperCase();
+        var filterMesin = document.getElementById("filterMesin").value.toUpperCase();
+        var tabel = document.getElementById("tabelRiwayatProduksi");
+        if (!tabel) return;
+        var baris = tabel.getElementsByTagName("tr");
+        for (var i = 1; i < baris.length; i++) {
+            var kolomtd = baris[i].getElementsByTagName("td");
+            if (kolomtd.length < 5) continue;
+            var teksBaris = baris[i].innerText.toUpperCase();
+            var matchText = filterText === "" || teksBaris.indexOf(filterText) > -1;
+            var matchShift = filterShift === "" || teksBaris.indexOf(filterShift) > -1;
+            var matchMesin = true;
+            if (filterMesin !== "") {
+                // No mesin ada di kolom ke-3 (index 2)
+                var noMesinCell = kolomtd[2] ? kolomtd[2].innerText.toUpperCase() : "";
+                matchMesin = noMesinCell.indexOf(filterMesin) > -1;
+            }
+            if (matchText && matchShift && matchMesin) {
+                baris[i].style.display = "";
+            } else {
+                baris[i].style.display = "none";
+            }
+        }
+    }
+    function resetFilterJurnal(){
+        document.getElementById("kotakCariPintarJurnal").value="";
+        document.getElementById("filterShift").value="";
+        document.getElementById("filterMesin").value="";
+        filterJurnalGabungan();
+    }
+    // kompatibilitas lama
+    function mesinSaringCariPintarJurnal(){ filterJurnalGabungan(); }
+// ==============================================================================
+// SINKRONISASI NILAI PANJANG AWAL ROL DARI KAMUS VIRTUAL LOKAL (HTML)
+// ==============================================================================
+function tarikPanjangAwalRol(indeks) {
+    var kodeRol = document.getElementById("pilihTelusur_" + indeks).value.toUpperCase().trim();
+    var inputAwal = document.getElementById("panjangAwal_" + indeks);
+    
+    if (kodeRol && penyimpananLokalDataRol[kodeRol] !== undefined) {
+        inputAwal.value = Math.round(penyimpananLokalDataRol[kodeRol]);
+    } else {
+        inputAwal.value = 0;
+    }
+    hitungKalkulatorFilmHorisontal(indeks);
+}
+
+</script>
+{% endblock %}

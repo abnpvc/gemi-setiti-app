@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* ==============================================================================
+       # KODE BARU DI SINI: CSS POP-UP (MODAL) LUXURY NAVY-ORANGE MASTER DATA SUPPLIER
+       ============================================================================== */
+    .modal-background {
+        display: none; 
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.75); 
+    }
+
+    .modal-content {
+        background-color: #111827; /* Navy Gelap Inti */
+        color: #ffffff;
+        margin: 8% auto;
+        padding: 25px;
+        border: 2px solid #ff7800; /* Berpendar Oranye Industrial */
+        border-radius: 8px;
+        width: 500px;
+        box-shadow: 0 0 20px rgba(255, 120, 0, 0.2);
+        position: relative;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #ff7800;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    .modal-header h2 {
+        color: #ffffff;
+        margin: 0;
+        font-size: 18px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .close-btn {
+        color: #94a3b8;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .close-btn:hover {
+        color: #ff7800;
+    }
+
+    .modal-content label {
+        display: block;
+        margin-top: 10px;
+        font-weight: bold;
+        color: #ff7800; /* Label Oranye Menyalakan Fokus */
+        font-size: 11px;
+        text-transform: uppercase;
+    }
+
+    .modal-content input, 
+    .modal-content textarea {
+        background: #0b0f19 !important;
+        color: #ffffff !important;
+        border: 1px solid #1e293b;
+        width: 100%;
+        padding: 8px;
+        margin: 5px 0 12px;
+        border-radius: 4px;
+        font-size: 13px;
+    }
+
+    .modal-content input:focus, 
+    .modal-content textarea:focus {
+        border-color: #ff7800 !important;
+        outline: none;
+        box-shadow: 0 0 8px rgba(255, 120, 0, 0.4);
+    }
+
+    .btn-tambah-utama {
+        background: #ff7800;
+        color: #000000;
+        border: none;
+        padding: 10px 20px;
+        font-weight: bold;
+        border-radius: 6px;
+        cursor: pointer;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        font-size: 13px;
+        box-shadow: 0 4px 6px rgba(255, 120, 0, 0.2);
+    }
+
+    .btn-tambah-utama:hover {
+        background: #e06600;
+        box-shadow: 0 0 10px rgba(255, 120, 0, 0.4);
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        border-top: 1px solid #1e293b;
+        padding-top: 15px;
+        margin-top: 15px;
+    }
+
+    .btn-simpan {
+        background: #ff7800;
+        color: #000000;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 12px;
+    }
+
+    .btn-batal {
+        background: #162235;
+        color: #fff;
+        border: 1px solid #ff7800;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+    }
+
+    .tabel-header-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .search-container {
+        width: 300px;
+        position: relative;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 8px 12px;
+        background: #111827 !important;
+        color: #ffffff !important;
+        border: 1px solid #1e293b;
+        border-radius: 6px;
+        font-size: 13px;
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        border-color: #ff7800 !important;
+        box-shadow: 0 0 8px rgba(255, 120, 0, 0.4);
+        outline: none;
+    }
+	    /* =================================================== */
+    /* PANEL SLIDE KANAN (DRAWER) LUXURY SUPPLIER          */
+    /* =================================================== */
+    .side-panel-background { display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); opacity: 0; transition: opacity 0.3s ease; }
+    .side-panel-background.buka { display: block; opacity: 1; }
+    .side-panel-content { position: fixed; right: -460px; top: 0; width: 450px; height: 100vh; background-color: #111827; border-left: 3px solid #ff7800; box-shadow: -5px 0 25px rgba(0,0,0,0.5); padding: 25px; box-sizing: border-box; transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1); overflow-y: auto; color: #fff; z-index: 1060; }
+    .side-panel-content.luncur { right: 0; }
+    .side-panel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ff7800; padding-bottom: 12px; margin-bottom: 15px; }
+    .side-panel-header h2 { font-size: 15px; font-weight: bold; color: #ffffff; text-transform: uppercase; margin: 0; letter-spacing: 0.5px; }
+    .side-panel-content label { display: block; margin-top: 10px; font-weight: bold; color: #ff7800; font-size: 11px; text-transform: uppercase; }
+    .side-panel-content input, .side-panel-content textarea { background: #0b0f19 !important; color: #ffffff !important; border: 1px solid #1e293b; width: 100%; padding: 8px; margin: 4px 0 10px; border-radius: 4px; font-size: 13px; box-sizing: border-box; }
+    .side-panel-content input:focus, .side-panel-content textarea:focus { border-color: #ff7800 !important; outline: none; box-shadow: 0 0 8px rgba(255, 120, 0, 0.4); }
+
+</style>
+<!-- TOMBOL UTAMA PEMICU POP-UP SUPPLIER -->
+<button class="btn-tambah-utama" onclick="bukaModal()">➕ Tambah Supplier Baru</button>
+
+<!-- POP-UP (MODAL WINDOW) INPUT DATA SUPPLIER -->
+<div id="modalInputSupplier" class="modal-background">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>📦 INPUT REGISTRASI MITRA SUPPLIER</h2>
+            <span class="close-btn" onclick="tutupModal()">&times;</span>
+        </div>
+        
+        <form action="{{ url_for('tambah_supplier') }}" method="POST">
+            <label>📦 Nama Perusahaan Supplier</label>
+            <input type="text" name="nama" required placeholder="Ex: PT. SCGC RESIN INDONESIA..." oninput="this.value = this.value.toUpperCase()">
+
+            <label>🔑 Kode Singkat Supplier (Max 10 Huruf Unik)</label>
+            <input type="text" name="kode" required placeholder="Contoh: SCGC, ABN, LG" oninput="this.value = this.value.toUpperCase()">
+            <p style="font-size: 11px; color: #ff7800; margin-top: -8px; margin-bottom: 10px; font-weight: bold; letter-spacing: 0.3px;">* PENTING: Kode digunakan otomatis menyusun nomor rol film saat kedatangan.</p>
+
+            <label>📞 Nomor Telepon / Kontak Resmi</label>
+            <input type="text" name="telepon" placeholder="Contoh: 021-xxxxxx atau 08xxxxxx">
+
+            <label>📍 Alamat Lengkap Perusahaan</label>
+            <textarea name="alamat" rows="3" placeholder="Alamat kantor atau gudang hulu supplier..." oninput="this.value = this.value.toUpperCase()" style="resize: none; background: #0b0f19; color: #fff; border: 1px solid #1e293b; width: 100%; padding: 8px; border-radius: 4px; margin-top: 5px;"></textarea>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-batal" onclick="tutupModal()">Batal</button>
+                <button type="submit" class="btn-simpan">💾 Simpan Mitra</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- CONTAINER DATA UTAMA: KEDAP GELAP NAVY -->
+<div class="card" style="padding: 20px; background: #0b0f19; border-top: 4px solid #ff7800; border-radius: 8px; color: #fff; border: 1px solid #1e293b;">
+    
+    <!-- HEADER FLEKSIBEL KOTAK PENCARIAN RADAR -->
+    <div class="tabel-header-flex">
+        <h3 style="margin: 0; color: #ffffff; text-transform: uppercase; font-size: 16px; letter-spacing: 0.5px;">📜 DATABASE SUPPLIER PEMASOK AKTIF</h3>
+        <div class="search-container">
+            <input type="text" id="inputCariSupplier" class="search-input" onkeyup="cariSupplierInstan()" placeholder="🔍 Cari nama, ID, atau kode singkat...">
+        </div>
+    </div>
+    <!-- AREA TABEL REAL-TIME MENJIPLAK ACUAN GAMBAR UTAMA -->
+   <div style="overflow-x: auto; max-height: 520px; overflow-y: auto; border-radius: 6px; border: 1px solid #1e293b;">
+    <table id="tabelSupplier" style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; color: #fff;">
+        <thead>
+            <!-- SUNTIKKAN POSISI STICKY DI SINI -->
+            <tr style="background: #162235; color: #ffffff; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid #ff7800; font-size: 11px; position: sticky; top: 0; z-index: 10;">
+                <th style="padding: 12px 10px; border: 1px solid #1f2937; width: 100px; color: #ff7800;">ID Supplier</th>
+                <th style="padding: 12px 10px; border: 1px solid #1f2937; text-align: left; padding-left: 15px;">Nama Supplier</th>
+                <th style="padding: 12px 10px; border: 1px solid #1f2937; width: 120px;">Kode Singkat</th>
+                <th style="padding: 12px 10px; border: 1px solid #1f2937; width: 130px;">No. Telepon</th>
+                <th style="padding: 12px 10px; border: 1px solid #1f2937; text-align: left; padding-left: 15px;">Alamat Kantor</th>
+                <th style="padding: 12px 10px; border: 1px solid #1f2937; width: 100px;">Aksi</th>
+            </tr>
+        </thead>
+
+            <!-- ==============================================================================
+     FIX INTEGRASI: PENYELARASAN POSISI KOLOM MATERIAL SUPPLIER VALID (HTML)
+     ============================================================================== -->
+<tbody>
+    {% for s in supplier_list %}
+    <tr style="border-bottom: 1px solid #1f2937; background: #0b0f19;" onmouseover="this.style.background='#162235'" onmouseout="this.style.background='#0b0f19'">
+        <td style="padding: 12px 10px; border: 1px solid #1f2937; font-family: 'Courier New', monospace; font-weight: 900; color: #facc15; font-size: 13px; letter-spacing: 0.5px;">{{ s.id_supplier }}</td>
+        
+        <!-- KOLOM 2: SEHARUSNYA TEXT NAMA PERUSAHAAN (SESUAI HEADER) -->
+        <td style="padding: 12px 10px; border: 1px solid #1f2937; text-align: left; padding-left: 15px; font-weight: bold; color: #f8fafc; font-size: 13px;">{{ s.nama_supplier }}</td>
+        
+        <!-- KOLOM 3: SEHARUSNYA BADGE INISIAL KODE SINGKAT (SESUAI HEADER) -->
+        <td style="padding: 12px 10px; border: 1px solid #1f2937;">
+            <span style="background: rgba(255, 120, 0, 0.08); color: #ffffff; padding: 4px 12px; border: 1px solid #ff7800; border-radius: 6px; font-family: 'Courier New', monospace; font-weight: 900; font-size: 12px; letter-spacing: 0.5px; display: inline-block;">
+                {{ s.kode_singkat }}
+            </span>
+        </td>
+        
+        <td style="padding: 12px 10px; border: 1px solid #1f2937; color: #cbd5e1; font-weight: 500;">{{ s.telepon or '-' }}</td>
+        <td style="padding: 12px 10px; border: 1px solid #1f2937; text-align: left; padding-left: 15px; font-size: 12px; color: #cbd5e1; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ s.alamat or '-' }}</td>
+        <td style="padding: 12px 10px; border: 1px solid #1f2937;">
+            <div style="display: flex; gap: 5px; justify-content: center; align-items: center;">
+                <button type="button" onclick="bukaPanelEditSupplier('{{ s.id_supplier }}', '{{ s.nama_supplier }}', '{{ s.kode_singkat }}', '{{ s.telepon or '' }}', '{{ s.alamat or '' }}')" style="background: #064e3b; color: #34d399; padding: 4px 8px; border: 1px solid #34d399; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; display: inline-block;">✏️</button>
+                <form action="{{ url_for('hapus_supplier', id=s.id_supplier) }}" method="POST" style="display:inline; margin:0;" onsubmit="return confirm('⚠️ HAPUS AUDIT:\nYakin ingin menghapus data mitra supplier {{ s.nama_supplier }} dari server hulu?')">
+                    <button type="submit" style="background: #7f1d1d; color: #f87171; padding: 4px 8px; border: 1px solid #f87171; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; display: inline-block; margin:0;">🗑️</button>
+                </form>
+            </div>
+        </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" style="padding: 40px; color: #64748b; font-style: italic; background: #0b0f19; text-align: center;">📭 Belum ada data mitra supplier terdaftar di server hulu.</td></tr>
+    {% endfor %}
+</tbody>
+
+        </table>
+
+
+    </div>
+</div>
+<!-- =================================================== -->
+<!-- JENDELA PANEL SLIDE KANAN (DRAWER EDIT SUPPLIER)    -->
+<!-- =================================================== -->
+<div id="latarPanelEditSupplier" class="side-panel-background" onclick="tutupPanelEditSupplier()"></div>
+<div id="kontenPanelEditSupplier" class="side-panel-content">
+    <div class="side-panel-header">
+        <h2>✏️ PERBARUI MITRA SUPPLIER</h2>
+        <span class="close-btn" onclick="tutupPanelEditSupplier()">&times;</span>
+    </div>
+    
+    <form id="formEditSupplierMurni" method="POST">
+        <label>🔑 ID Supplier (Sistem Mengunci)</label>
+        <input type="text" id="editIdSupplier" disabled style="color: #94a3b8 !important; font-family: monospace; font-weight: bold;">
+
+		<label>🔑 Kode Singkat Supplier (Max 10 Huruf Unik)</label>
+        <input type="text" name="kode" id="editKodeSupplier" required oninput="this.value = this.value.toUpperCase()">
+
+        <label>📦 Nama Perusahaan Supplier</label>
+        <input type="text" name="nama" id="editNamaSupplier" required oninput="this.value = this.value.toUpperCase()">
+
+        
+        <label>📞 Nomor Telepon / Kontak Resmi</label>
+        <input type="text" name="telepon" id="editTeleponSupplier">
+
+        <label>📍 Alamat Lengkap Perusahaan</label>
+        <textarea name="alamat" id="editAlamatSupplier" rows="3" oninput="this.value = this.value.toUpperCase()" style="resize: none;"></textarea>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #1e293b; padding-top: 15px; margin-top: 15px;">
+            <button type="button" class="btn-batal" onclick="tutupPanelEditSupplier()">Batal</button>
+            <button type="submit" class="btn-simpan">💾 Simpan Perubahan</button>
+        </div>
+    </form>
+</div>
+
+<!-- ENGINE JAVASCRIPT UNTUK KONTROL POP-UP & SEARCH RADAR INSTAN SUPPLIER -->
+<script>
+    var modal = document.getElementById("modalInputSupplier");
+    function bukaModal() { modal.style.display = "block"; }
+    function tutupModal() { modal.style.display = "none"; }
+    window.onclick = function(event) { if (event.target == modal) { modal.style.display = "none"; } }
+
+    function cariSupplierInstan() {
+        var input, filter, table, tr, tdId, tdNama, tdKode, i, txtValueId, txtValueNama, txtValueKode;
+        input = document.getElementById("inputCariSupplier");
+        filter = input.value.toUpperCase();
+        table = document.getElementById("tabelSupplier");
+        tr = table.getElementsByTagName("tr");
+
+        for (i = 1; i < tr.length; i++) {
+            tr[i].style.display = "none"; 
+            tdId = tr[i].getElementsByTagName("td")[0]; 
+            tdNama = tr[i].getElementsByTagName("td")[1]; 
+            tdKode = tr[i].getElementsByTagName("td")[2]; 
+            
+            if (tdId || tdNama || tdKode) {
+                txtValueId = tdId ? (tdId.textContent || tdId.innerText) : "";
+                txtValueNama = tdNama ? (tdNama.textContent || tdNama.innerText) : "";
+                txtValueKode = tdKode ? (tdKode.textContent || tdKode.innerText) : "";
+                
+                if (txtValueId.toUpperCase().indexOf(filter) > -1 || 
+                    txtValueNama.toUpperCase().indexOf(filter) > -1 || 
+                    txtValueKode.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                }
+            }
+        }
+    }
+	    // ===================================================
+    // BAGIAN 3: ENGINE JAVASCRIPT ANIMASI SLIDE PANEL SUPPLIER
+    // ===================================================
+    var latarPanelSupplier = document.getElementById("latarPanelEditSupplier");
+    var kontenPanelSupplier = document.getElementById("kontenPanelEditSupplier");
+
+    function bukaPanelEditSupplier(id, nama, kode, telepon, alamat) {
+        // 1. Tembakkan rute action form dinamis langsung ke backend app.py
+        document.getElementById("formEditSupplierMurni").action = "/master/supplier/edit/" + id;
+        
+        // 2. Suntikkan data baris tabel ke dalam inputan panel slide kanan
+        document.getElementById("editIdSupplier").value = id;
+        document.getElementById("editNamaSupplier").value = nama;
+        document.getElementById("editKodeSupplier").value = kode;
+        document.getElementById("editTeleponSupplier").value = telepon;
+        document.getElementById("editAlamatSupplier").value = alamat;
+
+        // 3. Jalankan efek animasi meluncur dari sebelah kanan layar
+        latarPanelSupplier.style.display = "block";
+        setTimeout(function() {
+            latarPanelSupplier.classList.add("buka");
+            kontenPanelSupplier.classList.add("luncur");
+        }, 50);
+    }
+
+    function tutupPanelEditSupplier() {
+        // Tarik kembali panel keluar ke sisi kanan layar
+        kontenPanelSupplier.classList.remove("luncur");
+        latarPanelSupplier.classList.remove("buka");
+        setTimeout(function() {
+            latarPanelSupplier.style.display = "none";
+        }, 300);
+    }
+
+</script>
+{% endblock %}

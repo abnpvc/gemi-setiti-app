@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .card-dark { background:#0b0f19; border:1px solid #1e293b; border-radius:8px; padding:20px; color:#fff; margin-bottom:20px; }
+    .header-pesanan { border-left:4px solid #ff7800; padding-left:15px; margin-bottom:20px; }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
+    @media(max-width:800px){ .grid-2{ grid-template-columns:1fr; } }
+    .info-box { background:#111827; border:1px solid #1e293b; border-radius:6px; padding:12px; }
+    .info-box label { color:#ff7800; font-size:11px; font-weight:bold; text-transform:uppercase; display:block; margin-bottom:3px; }
+    .info-box div { color:#fff; font-weight:bold; font-size:13px; }
+    .badge { padding:4px 10px; border-radius:4px; font-size:12px; font-weight:900; border:1px solid; }
+    .badge-DRAFT { background:rgba(148,163,184,0.1); color:#94a3b8; border-color:#94a3b8; }
+    .badge-DIPROSES { background:rgba(250,204,21,0.15); color:#facc15; border-color:#facc15; }
+    .badge-SIAP\ KIRIM { background:rgba(96,165,250,0.15); color:#60a5fa; border-color:#60a5fa; }
+    .badge-DIKIRIM { background:rgba(52,211,153,0.15); color:#34d399; border-color:#34d399; }
+    .badge-SELESAI { background:rgba(34,197,94,0.2); color:#22c55e; border-color:#22c55e; }
+    .badge-BATAL { background:rgba(248,113,113,0.15); color:#f87171; border-color:#f87171; }
+    table { width:100%; border-collapse:collapse; font-size:12px; text-align:center; color:#fff; }
+    th { padding:10px; border:1px solid #1e293b; background:#162235; color:#fff; font-weight:bold; text-transform:uppercase; font-size:11px; }
+    td { padding:10px; border:1px solid #1e293b; background:#0b0f19; }
+    .btn-status { padding:8px 14px; border-radius:5px; font-size:11px; font-weight:bold; cursor:pointer; border:1px solid; margin:2px; }
+</style>
+
+<div class="header-pesanan">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div>
+            <span style="color:#94a3b8; font-size:11px; text-transform:uppercase;">Transaksi > Pesanan > Detail ></span>
+            <h1 style="color:#fff; margin:4px 0 0 0; font-size:22px; font-weight:900;">{{ pesanan.no_pesanan }} <span class="badge badge-{{ pesanan.status }}" style="font-size:12px; vertical-align:middle;">{{ pesanan.status }}</span></h1>
+            <p style="color:#64748b; margin:2px 0 0 0; font-size:13px;">Detail Order Pelanggan - {{ pesanan.tanggal_pesan.strftime('%d %B %Y') if pesanan.tanggal_pesan else '' }}</p>
+        </div>
+        <div style="display:flex; gap:8px;">
+            <a href="{{ url_for('transaksi_pesanan_barang_jadi') }}" style="background:#162235; color:#fff; border:1px solid #1e293b; padding:8px 14px; border-radius:5px; text-decoration:none; font-size:12px; font-weight:bold;">↩️ Kembali</a>
+            <button onclick="window.print()" style="background:#ff7800; color:#000; border:none; padding:8px 14px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:12px;">🖨️ Cetak Surat Jalan</button>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="card-dark" style="border-top:4px solid #facc15;">
+        <h3 style="margin:0 0 12px 0; color:#facc15; font-size:13px;">👥 INFO PELANGGAN</h3>
+        <div class="info-box" style="margin-bottom:10px;">
+            <label>Nama Pelanggan</label>
+            <div>{{ pesanan.pelanggan.nama_pelanggan if pesanan.pelanggan else pesanan.id_pelanggan }}</div>
+            <div style="font-size:11px; color:#94a3b8; font-weight:normal; margin-top:2px;">{{ pesanan.pelanggan.kode_singkat if pesanan.pelanggan else '' }} - {{ pesanan.pelanggan.telepon if pesanan.pelanggan else '' }}</div>
+        </div>
+        <div class="info-box">
+            <label>Alamat Kirim</label>
+            <div style="font-weight:normal; font-size:12px; line-height:1.5;">{{ pesanan.pelanggan.alamat if pesanan.pelanggan and pesanan.pelanggan.alamat else '-' }}</div>
+        </div>
+    </div>
+
+    <div class="card-dark" style="border-top:4px solid #ff7800;">
+        <h3 style="margin:0 0 12px 0; color:#ff7800; font-size:13px;">📦 INFO PESANAN</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="info-box">
+                <label>Tgl Pesan</label>
+                <div>{{ pesanan.tanggal_pesan.strftime('%d-%m-%Y') if pesanan.tanggal_pesan else '-' }}</div>
+            </div>
+            <div class="info-box">
+                <label>Rencana Kirim</label>
+                <div style="color:{% if pesanan.tanggal_kirim_rencana %}#34d399{% else %}#64748b{% endif %};">{{ pesanan.tanggal_kirim_rencana.strftime('%d-%m-%Y') if pesanan.tanggal_kirim_rencana else 'Belum ditentukan' }}</div>
+            </div>
+            <div class="info-box" style="grid-column:1/3;">
+                <label>Keterangan Umum</label>
+                <div style="font-weight:normal; font-size:12px;">{{ pesanan.keterangan or '-' }}</div>
+            </div>
+        </div>
+
+        <!-- FORM UPDATE STATUS -->
+        <div style="background:#162235; border:1px solid #1e293b; border-radius:6px; padding:12px; margin-top:12px;">
+            <label style="color:#ff7800; font-size:11px; font-weight:bold; text-transform:uppercase; display:block; margin-bottom:6px;">⚙️ Ubah Status Pesanan (Auto Potong Stok)</label>
+            <form action="{{ url_for('update_status_pesanan', id_pesanan=pesanan.id_pesanan) }}" method="POST" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <select name="status" style="background:#0b0f19; color:#fff; border:1px solid #1e293b; padding:7px 10px; border-radius:4px; font-size:12px; flex:1;">
+                    <option value="DRAFT" {% if pesanan.status=='DRAFT' %}selected{% endif %}>DRAFT - Draft Pesanan</option>
+                    <option value="DIPROSES" {% if pesanan.status=='DIPROSES' %}selected{% endif %}>DIPROSES - Sedang Disiapkan</option>
+                    <option value="SIAP KIRIM" {% if pesanan.status=='SIAP KIRIM' %}selected{% endif %}>SIAP KIRIM - Siap Dikirim</option>
+                    <option value="DIKIRIM" {% if pesanan.status=='DIKIRIM' %}selected{% endif %}>DIKIRIM - Potong Stok!</option>
+                    <option value="SELESAI" {% if pesanan.status=='SELESAI' %}selected{% endif %}>SELESAI - Selesai & Lunas</option>
+                    <option value="BATAL" {% if pesanan.status=='BATAL' %}selected{% endif %}>BATAL - Batalkan & Kembalikan Stok</option>
+                </select>
+                <button type="submit" class="btn-status" style="background:#ff7800; color:#000; border-color:#ff7800;">💾 UPDATE</button>
+            </form>
+            <small style="color:#94a3b8; font-size:10px; display:block; margin-top:6px;">* DIKIRIM/SELESAI = Stok barang jadi otomatis berkurang + tercatat di Kartu Stok Barang Jadi kategori PESANAN. BATAL = stok kembali.</small>
+        </div>
+    </div>
+</div>
+
+<div class="card-dark" style="border-top:4px solid #22c55e;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h3 style="margin:0; color:#22c55e; font-size:13px;">📋 RINCIAN ITEM PESANAN ({{ pesanan.items_pesanan|length }} ITEM)</h3>
+        <div style="font-size:11px; color:#94a3b8;">Total Qty: <b style="color:#fff;">{{ pesanan.items_pesanan|sum(attribute='jumlah_pesan') }} LBR</b></div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:30px;">No</th>
+                    <th style="text-align:left; padding-left:12px;">Barang Jadi</th>
+                    <th>Kategori</th>
+                    <th>Panjang</th>
+                    <th>Qty Pesan</th>
+                    <th>Stok Saat Ini</th>
+                    <th style="text-align:left;">Keterangan Item</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for det in pesanan.items_pesanan %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td style="text-align:left; padding-left:12px;">
+                        <div style="font-weight:bold;">{{ det.barang_jadi.nama_barang if det.barang_jadi else det.id_barang_jadi }}</div>
+                        <div style="font-size:10px; color:#94a3b8; font-family:monospace;">{{ det.id_barang_jadi }}</div>
+                    </td>
+                    <td><span style="background:#162235; border:1px solid #1e293b; padding:2px 6px; border-radius:4px; font-size:10px;">{{ det.barang_jadi.kategori if det.barang_jadi else '-' }}</span></td>
+                    <td><span style="background:rgba(255,120,0,0.1); border:1px solid #ff7800; color:#ff7800; padding:2px 6px; border-radius:4px; font-weight:bold;">{{ det.panjang_produk }}M</span></td>
+                    <td style="font-weight:900; color:#facc15; font-size:13px;">{{ det.jumlah_pesan }} LBR</td>
+                    <td style="font-family:monospace; font-weight:bold; color:{% if det.barang_jadi and det.barang_jadi.stok_akhir < det.jumlah_pesan %}#f87171{% else %}#34d399{% endif %};">
+                        {{ det.barang_jadi.stok_akhir if det.barang_jadi else 0 }} LBR
+                        {% if det.barang_jadi and det.barang_jadi.stok_akhir < det.jumlah_pesan %}<div style="font-size:9px; color:#f87171;">⚠️ Kurang!</div>{% endif %}
+                    </td>
+                    <td style="text-align:left; font-size:11px;">{{ det.keterangan_item or '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- SURAT JALAN PRINT VIEW -->
+    <div id="printArea" style="display:none;">
+        <h2 style="text-align:center;">SURAT JALAN - {{ pesanan.no_pesanan }}</h2>
+        <p>Pelanggan: {{ pesanan.pelanggan.nama_pelanggan if pesanan.pelanggan else '' }}<br>
+        Tanggal: {{ pesanan.tanggal_pesan.strftime('%d-%m-%Y') if pesanan.tanggal_pesan else '' }} | Rencana Kirim: {{ pesanan.tanggal_kirim_rencana.strftime('%d-%m-%Y') if pesanan.tanggal_kirim_rencana else '-' }}</p>
+        <table border="1" style="width:100%; border-collapse:collapse;">
+            <tr><th>No</th><th>Nama Barang</th><th>Panjang</th><th>Qty</th><th>Ket</th></tr>
+            {% for det in pesanan.items_pesanan %}
+            <tr><td>{{ loop.index }}</td><td>{{ det.barang_jadi.nama_barang if det.barang_jadi else det.id_barang_jadi }}</td><td>{{ det.panjang_produk }}M</td><td>{{ det.jumlah_pesan }}</td><td>{{ det.keterangan_item or '' }}</td></tr>
+            {% endfor %}
+        </table>
+        <br><br>
+        <div style="display:flex; justify-content:space-between;">
+            <div>Hormat Kami,<br><br><br>Gemi Setiti</div>
+            <div>Penerima,<br><br><br>{{ pesanan.pelanggan.nama_pelanggan if pesanan.pelanggan else '' }}</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Cetak khusus surat jalan
+    var originalPrint = window.print;
+    window.print = function(){
+        var content = document.getElementById("printArea").innerHTML;
+        var win = window.open('', '_blank');
+        win.document.write('<html><head><title>Surat Jalan {{ pesanan.no_pesanan }}</title><style>body{font-family:Arial,sans-serif;padding:20px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #000;padding:8px;text-align:center;}th{background:#f2f2f2;}</style></head><body>'+content+'</body></html>');
+        win.document.close();
+        win.print();
+    }
+</script>
+{% endblock %}

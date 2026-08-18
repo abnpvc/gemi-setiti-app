@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .laci-turun-panel { max-height: 0; overflow: hidden; transition: max-height 0.45s ease-in-out; background: #0b0f19; border-radius: 8px; border: 0 solid #1f2937; margin-bottom: 0; opacity:0; }
+    .laci-turun-panel.terbuka { max-height: 2000px; border: 2px solid #1f2937; border-top: 4px solid #ff7800; padding: 20px; margin-bottom: 16px; opacity:1; }
+    .laci-turun-panel label { display: block; color: #ff7800; font-weight: 900; font-size: 11px; text-transform: uppercase; margin-bottom: 5px; }
+    .laci-turun-panel input, .laci-turun-panel select { background: #111827 !important; color: #fff !important; border: 2px solid #1f2937 !important; padding: 6px 8px; border-radius: 4px; font-size: 12px; font-weight: 900; height: 36px; box-sizing:border-box; width:100%; }
+    .btn-pemicu-laci { background: #ff7800; color: #000; border: none; padding: 9px 18px; font-weight: 900; border-radius: 6px; cursor: pointer; font-size: 11.5px; text-transform: uppercase; box-shadow: 0 4px 10px rgba(255,120,0,0.2); }
+    .btn-pemicu-laci:hover { background: #ff8c28; }
+    .btn-simpan-transaksi { background: #34d399; color: #000; border: none; padding: 10px 22px; font-weight: 900; border-radius: 6px; cursor: pointer; font-size: 12px; text-transform: uppercase; }
+    .btn-batal-laci { background: #162235; color: #fff; border: 1px solid #ff7800; padding: 10px 18px; border-radius: 6px; font-weight: 900; font-size: 12px; cursor:pointer; }
+    .tabel-rekap-utama { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; color: #fff; }
+    .tabel-rekap-utama th { padding: 12px 6px; border: 1px solid #1f2937; background: #162235; color: #fff; font-weight: 900; text-transform: uppercase; font-size: 10.5px; position: sticky; top:0; z-index:5; }
+    .tabel-rekap-utama td { padding: 9px 6px; border: 1px solid #1f2937; background: #0b0f19; font-weight: 700; font-size: 11.5px; }
+    .badge-masuk { background: rgba(52,211,153,0.15); color:#34d399; border:1px solid #34d399; padding:3px 7px; border-radius:4px; font-size:10px; font-weight:900; }
+    .badge-keluar { background: rgba(248,113,113,0.15); color:#f87171; border:1px solid #f87171; padding:3px 7px; border-radius:4px; font-size:10px; font-weight:900; }
+    .badge-produksi { background: rgba(250,204,21,0.15); color:#facc15; border:1px solid #facc15; padding:3px 7px; border-radius:4px; font-size:10px; font-weight:900; }
+    .badge-panjang { background: rgba(56,189,248,0.15); color:#38bdf8; border:1px solid #38bdf8; padding:3px 7px; border-radius:4px; font-size:10px; font-weight:900; }
+    .badge-request { background: rgba(251,146,60,0.15); color:#fb923c; border:1px solid #fb923c; padding:3px 7px; border-radius:4px; font-size:10px; font-weight:900; }
+</style>
+
+<div class="header-halaman" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-left:4px solid #f87171; padding-left:15px;">
+    <div>
+        <h1 style="color:#fff; margin:4px 0 0 0; font-size:20px; font-weight:900; letter-spacing:0.5px;">📜 LOG PENYESUAIAN BARANG JADI PER PANJANG</h1>
+        <div style="font-size:11px; color:#94a3b8; font-weight:700; margin-top:4px;">{{ tgl_dari_val }} s/d {{ tgl_sampai_val }} | Filter: {{ panjang_filter_val }} | Total: {{ log_koreksi_list|length }} log</div>
+    </div>
+    <div style="display:flex; gap:8px;">
+        <a href="{{ url_for('monitoring_kartu_stok_barang_jadi') }}" style="background:#162235; color:#fff; border:1px solid #ff7800; padding:8px 14px; border-radius:6px; font-weight:900; font-size:11px; text-decoration:none;">⬅️ KARTU STOK</a>
+    </div>
+</div>
+
+<!-- FILTER TANGGAL + PANJANG -->
+<div style="background:#111827; border:1px solid #1e293b; border-top:3px solid #f87171; border-radius:8px; padding:14px 16px; display:flex; gap:10px; align-items:end; flex-wrap:wrap; margin-bottom:16px;">
+    <form method="GET" action="{{ url_for('monitoring_log_barang_jadi') }}" style="display:flex; gap:10px; align-items:end; flex-wrap:wrap;">
+        <div>
+            <label style="color:#ff7800; font-size:10px; font-weight:900; text-transform:uppercase;">TGL DARI</label>
+            <input type="date" name="tgl_dari" value="{{ tgl_dari_val }}" style="background:#0b0f19; color:#fff; border:1px solid #1e293b; padding:7px 10px; border-radius:5px; font-size:12px;">
+        </div>
+        <div>
+            <label style="color:#ff7800; font-size:10px; font-weight:900; text-transform:uppercase;">TGL SAMPAI</label>
+            <input type="date" name="tgl_sampai" value="{{ tgl_sampai_val }}" style="background:#0b0f19; color:#fff; border:1px solid #1e293b; padding:7px 10px; border-radius:5px; font-size:12px;">
+        </div>
+        <div>
+            <label style="color:#38bdf8; font-size:10px; font-weight:900; text-transform:uppercase;">FILTER PANJANG</label>
+            <select name="panjang" style="background:#0b0f19; color:#fff; border:1px solid #1e293b; padding:7px 10px; border-radius:5px; font-size:12px; font-weight:900; min-width:150px;">
+                <option value="ALL" {% if panjang_filter_val=='ALL' %}selected{% endif %}>🔍 SEMUA PANJANG</option>
+                <option value="3" {% if panjang_filter_val=='3' %}selected{% endif %}>📏 3 METER</option>
+                <option value="4" {% if panjang_filter_val=='4' %}selected{% endif %}>📏 4 METER (STD)</option>
+                <option value="5" {% if panjang_filter_val=='5' %}selected{% endif %}>📏 5 METER</option>
+                <option value="6" {% if panjang_filter_val=='6' %}selected{% endif %}>📏 6 METER</option>
+                <option value="REQUEST" {% if panjang_filter_val=='REQUEST' %}selected{% endif %}>⚡ REQUEST CUSTOM</option>
+            </select>
+        </div>
+        <button type="submit" style="background:#ff7800; color:#000; border:none; padding:8px 16px; border-radius:5px; font-weight:900; font-size:11px; cursor:pointer;">🔍 FILTER</button>
+        <button type="button" onclick="window.location.href='{{ url_for('monitoring_log_barang_jadi') }}'" style="background:#162235; color:#fff; border:1px solid #ff7800; padding:8px 12px; border-radius:5px; font-weight:900; font-size:11px; cursor:pointer;">RESET</button>
+    </form>
+    <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+        <input type="text" id="inputCariLog" onkeyup="cariLogInstan()" placeholder="🔍 Cari ID / Nama / Alasan..." style="background:#0b0f19; color:#fff; border:1px solid #1e293b; padding:8px 12px; border-radius:5px; width:260px; font-size:12px;">
+    </div>
+</div>
+
+<!-- PANEL INPUT + FILTER LOG + TABEL -->
+<div style="background:#111827; border:1px solid #1e293b; border-top:4px solid #f87171; border-radius:8px; padding:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+        <h3 style="margin:0; color:#fff; font-size:12.5px; font-weight:900; text-transform:uppercase; display:flex; align-items:center; gap:8px;">
+            📝 INPUT & RIWAYAT
+            <span style="font-size:10px; color:#94a3b8; font-weight:700; text-transform:none; background:#0b0f19; border:1px solid #1e293b; padding:2px 8px; border-radius:10px;">{{ tgl_dari_val }} s/d {{ tgl_sampai_val }} | {{ panjang_filter_val }}</span>
+        </h3>
+        <button type="button" class="btn-pemicu-laci" id="btnTeksLaciBawah" onclick="saklarLaciBarangJadi()">➕ INPUT PENYESUAIAN + PANJANG</button>
+    </div>
+
+    <!-- LACI INPUT -->
+    <div class="laci-turun-panel" id="panelLaciBJ">
+        <form id="formBJ" action="{{ url_for('simpan_penyesuaian_barang_jadi') }}" method="POST">
+            <input type="hidden" name="id_penyesuaian_edit" id="idEditBJ">
+            <div style="display:grid; grid-template-columns: 150px 150px 130px 140px 1fr 110px; gap:12px;">
+                <div>
+                    <label>📅 TANGGAL</label>
+                    <input type="date" name="tanggal_transaksi" id="tglBJ" required value="{{ tgl_sampai_val }}">
+                </div>
+                <div>
+                    <label>📂 KATEGORI KASUS</label>
+                    <select name="kategori_cases" id="kategoriBJ" required onchange="autoSaklarBJ()">
+                        <option value="">-- PILIH --</option>
+                        <option value="PENJUALAN">PENJUALAN</option>
+                        <option value="RETUR">RETUR</option>
+                        <option value="KOREKSI">KOREKSI</option>
+                        <option value="RUSAK">RUSAK</option>
+                    </select>
+                </div>
+                <div>
+                    <label>🔀 JENIS SAKLAR</label>
+                    <select name="jenis_saklar" id="saklarBJ" required>
+                        <option value="KELUAR">KELUAR (-)</option>
+                        <option value="MASUK">MASUK (+)</option>
+                    </select>
+                </div>
+                <div>
+                    <label>📏 PANJANG</label>
+                    <select id="panjangBJ_select" required onchange="cekRequestPanjang()">
+                        <option value="3">3 METER</option>
+                        <option value="4" selected>4 METER</option>
+                        <option value="5">5 METER</option>
+                        <option value="6">6 METER</option>
+                        <option value="custom">REQUEST CUSTOM</option>
+                    </select>
+                    <input type="number" id="panjangCustomInput" step="0.01" min="0.1" placeholder="3.5" style="margin-top:6px; display:none; border-color:#fb923c !important;">
+                </div>
+                <div>
+                    <label>📦 PILIH BARANG JADI</label>
+                    <select name="id_barang_jadi" id="selectBarangBJ" required>
+                        <option value="">-- PILIH BARANG JADI --</option>
+                        {% for b in barang_list %}
+                        <option value="{{ b.id_barang_jadi }}">{{ b.id_barang_jadi }} - {{ b.nama_barang }} ({{ b.stok_akhir }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label>🔢 JUMLAH LEMBAR</label>
+                    <input type="number" name="jumlah_volume" id="qtyBJ" min="0" step="1" required placeholder="0">
+                </div>
+            </div>
+            <div style="margin-top:12px;">
+                <label>📝 ALASAN / KETERANGAN</label>
+                <input type="text" name="alasan_koreksi" id="alasanBJ" required placeholder="PENJUALAN TOKO A 4M / RETUR CUSTOMER 3M / KOREKSI OPNAME 5M" oninput="this.value=this.value.toUpperCase()" style="text-transform:uppercase;">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:15px; border-top:1px solid #1e293b; padding-top:12px;">
+                <button type="button" class="btn-batal-laci" onclick="saklarLaciBarangJadi(false)">BATAL</button>
+                <button type="submit" class="btn-simpan-transaksi">💾 SIMPAN PENYESUAIAN PER PANJANG</button>
+            </div>
+        </form>
+    </div>
+
+    <div style="display:flex; gap:8px; align-items:center; margin:12px 0 10px 0; flex-wrap:wrap; background:#0f172a; padding:8px 12px; border-radius:8px; border:1px solid #1e293b;">
+        <span style="color:#facc15; font-size:11px; font-weight:900;">FILTER LOG:</span>
+        <button type="button" id="btnFilterManual" onclick="filterLogBJ('MANUAL')" style="background:#22c55e; color:#000; border:1px solid #22c55e; padding:6px 14px; border-radius:20px; font-size:11px; font-weight:900; cursor:pointer;">MANUAL SAJA (KOREKSI/RETUR/RUSAK)</button>
+        <button type="button" id="btnFilterSemua" onclick="filterLogBJ('SEMUA')" style="background:#162235; color:#94a3b8; border:1px solid #1e293b; padding:6px 14px; border-radius:20px; font-size:11px; font-weight:700; cursor:pointer;">LIHAT SEMUA + PENJUALAN SJ</button>
+        <span id="infoFilterLog" style="color:#64748b; font-size:10px; margin-left:8px;"></span>
+        <div style="margin-left:auto; display:flex; gap:6px;">
+            <button type="button" onclick="exportExcelLogBJ()" style="background:#fff; color:#000; border:1px solid #000; padding:5px 12px; border-radius:5px; font-size:11px; font-weight:900; cursor:pointer;">📊 EXCEL LOG</button>
+            <button type="button" onclick="exportPDFLogBJ()" style="background:#fff; color:#000; border:1px solid #000; padding:5px 12px; border-radius:5px; font-size:11px; font-weight:900; cursor:pointer;">📄 PDF LOG</button>
+        </div>
+    </div>
+
+    <div style="max-height:70vh; overflow:auto; border:1px solid #1e293b; border-radius:6px;">
+        <table class="tabel-rekap-utama" id="tabelLogBJ">
+            <thead><tr><th>TGL</th><th>KAT</th><th>SAKLAR</th><th style="width:80px;">PANJANG</th><th>ID</th><th style="text-align:left;">NAMA</th><th>INPUT</th><th>METER</th><th>EFEKTIF</th><th style="text-align:left;">ALASAN</th><th>AKSI</th></tr></thead>
+            <tbody>
+                {% for log in log_koreksi_list %}
+                <tr class="log-row" data-kat="{{ log.kategori }}" data-is-jual="{{ '1' if log.kategori=='PENJUALAN' else '0' }}">
+                    <td style="font-family:monospace; font-size:11px;">{{ log.tanggal.strftime('%d-%m-%Y') if log.tanggal else '-' }}</td>
+                    <td><span class="badge-produksi" style="font-size:9px;">{{ log.kategori }}</span></td>
+                    <td>{% if log.jenis_saklar=='MASUK' %}<span class="badge-masuk">+ MASUK</span>{% else %}<span class="badge-keluar">- KELUAR</span>{% endif %}</td>
+                    <td>{% set pj = log.panjang_produk or 4.0 %}{% if pj in [3.0,4.0,5.0,6.0] %}<span class="badge-panjang">{{ pj|int if pj==pj|int else pj }}M</span>{% else %}<span class="badge-request">{{ pj }}M REQ</span>{% endif %}</td>
+                    <td style="font-family:monospace; color:#facc15; font-weight:900; font-size:11px;">{{ log.id_barang_jadi }}</td>
+                    <td style="text-align:left; font-size:11px;">{{ log.barang_jadi.nama_barang if log.barang_jadi else '-' }}</td>
+                    <td style="font-family:monospace;">{{ log.jumlah_input }}</td>
+                    <td style="font-family:monospace; color:#7dd3fc;">{{ (log.jumlah_input * (log.panjang_produk or 4.0))|round(2) }} M</td>
+                    <td style="font-family:monospace; color:{% if log.jumlah_efektif>0 %}#34d399{% else %}#f87171{% endif %}; font-weight:900;">{{ log.jumlah_efektif }}</td>
+                    <td style="text-align:left; font-size:10px; color:#94a3b8;">{{ log.alasan_keterangan }}</td>
+                    <td style="display:flex; gap:4px; justify-content:center;">
+                        <button onclick="editLogBJ({{ log.id_penyesuaian }}, '{{ log.tanggal }}', '{{ log.kategori }}', '{{ log.jenis_saklar }}', '{{ log.id_barang_jadi }}', {{ log.panjang_produk or 4.0 }}, {{ log.jumlah_input }}, {{ log.alasan_keterangan|tojson }})" style="background:#162235; border:1px solid #facc15; color:#facc15; padding:2px 5px; border-radius:3px; font-size:10px; cursor:pointer;">✏️</button>
+                        <form action="{{ url_for('hapus_penyesuaian_barang_jadi', id_koreksi=log.id_penyesuaian) }}" method="POST" onsubmit="return confirm('Hapus log {{ log.kategori }} {{ log.id_barang_jadi }} {{ log.panjang_produk }}M sebanyak {{ log.jumlah_input }}?')">
+                            <button type="submit" style="background:#7f1d1d; border:1px solid #f87171; color:#f87171; padding:2px 5px; border-radius:3px; font-size:10px; cursor:pointer;">🗑️</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="11" style="padding:20px; color:#64748b; font-style:italic;">Belum ada log pada periode & panjang ini.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function saklarLaciBarangJadi(force){
+    var panel=document.getElementById("panelLaciBJ");
+    var btn=document.getElementById("btnTeksLaciBawah");
+    if(!panel) return;
+    var terbuka=panel.classList.contains("terbuka");
+    var mauBuka=force!==undefined ? force : !terbuka;
+    if(mauBuka){ panel.classList.add("terbuka"); if(btn) btn.innerText="✕ TUTUP FORM"; setTimeout(function(){ panel.scrollIntoView({behavior:'smooth', block:'start'}); }, 150); }
+    else { panel.classList.remove("terbuka"); if(btn) btn.innerText="➕ INPUT PENYESUAIAN + PANJANG"; document.getElementById("idEditBJ").value=""; }
+}
+function cekRequestPanjang(){
+    var sel=document.getElementById("panjangBJ_select");
+    var custom=document.getElementById("panjangCustomInput");
+    if(sel.value==="custom"){ custom.style.display="block"; custom.required=true; custom.focus(); }
+    else { custom.style.display="none"; custom.required=false; custom.value=""; }
+}
+function autoSaklarBJ(){
+    var kat=document.getElementById("kategoriBJ").value;
+    var sak=document.getElementById("saklarBJ");
+    if(kat==="RETUR") sak.value="MASUK";
+    else if(kat==="PENJUALAN" || kat==="RUSAK") sak.value="KELUAR";
+}
+document.getElementById("formBJ").addEventListener("submit", function(e){
+    var sel=document.getElementById("panjangBJ_select");
+    var custom=document.getElementById("panjangCustomInput");
+    var form = this;
+    var existingHidden = form.querySelector("input[name='panjang_produk'][type='hidden']");
+    if(existingHidden) existingHidden.remove();
+    var hiddenPanjangInput=document.createElement("input");
+    hiddenPanjangInput.type="hidden";
+    hiddenPanjangInput.name="panjang_produk";
+    if(sel.value==="custom"){
+        if(!custom.value || parseFloat(custom.value)<=0){ alert("Isi panjang custom request!"); e.preventDefault(); return; }
+        hiddenPanjangInput.value=parseFloat(custom.value);
+    } else { hiddenPanjangInput.value=parseFloat(sel.value); }
+    form.appendChild(hiddenPanjangInput);
+});
+function cariLogInstan(){
+    var input=document.getElementById("inputCariLog"); var filter=input.value.toUpperCase();
+    var table=document.getElementById("tabelLogBJ"); var tr=table.getElementsByTagName("tr");
+    for(var i=1;i<tr.length;i++){ var txt=tr[i].innerText.toUpperCase(); tr[i].style.display= txt.indexOf(filter)>-1 ? "" : "none"; }
+}
+function editLogBJ(id,tanggal,kategori,saklar,id_barang,panjang,qty,alasan){
+    saklarLaciBarangJadi(true);
+    document.getElementById("idEditBJ").value=id;
+    document.getElementById("tglBJ").value=tanggal;
+    document.getElementById("kategoriBJ").value=kategori;
+    document.getElementById("saklarBJ").value=saklar;
+    document.getElementById("selectBarangBJ").value=id_barang;
+    document.getElementById("qtyBJ").value=qty;
+    document.getElementById("alasanBJ").value=alasan;
+    var sel=document.getElementById("panjangBJ_select");
+    var custom=document.getElementById("panjangCustomInput");
+    if([3,4,5,6].includes(parseFloat(panjang))){ sel.value=String(parseInt(panjang)); custom.style.display="none"; }
+    else { sel.value="custom"; custom.style.display="block"; custom.value=panjang; }
+}
+function exportExcelLogBJ(){
+    var srcTable=document.getElementById("tabelLogBJ");
+    var headers=["TGL","KAT","SAKLAR","PANJANG","ID","NAMA","INPUT","METER","EFEKTIF","ALASAN"];
+    var html='<table border="1" style="border-collapse:collapse; width:100%; font-family:Arial; font-size:11px; color:#000;">';
+    html+='<tr><td colspan="10" style="text-align:center; font-weight:bold; font-size:13px; padding:8px; border:1px solid #000; background:#fff; color:#000;">LOG PENYESUAIAN BARANG JADI PER PANJANG - GEMI SETITI</td></tr>';
+    html+='<tr><td colspan="10" style="text-align:center; font-size:11px; padding:4px; border:1px solid #000; background:#fff; color:#000;">PERIODE {{ tgl_dari_val }} S/D {{ tgl_sampai_val }} | FILTER: {{ panjang_filter_val }} | Export: '+new Date().toLocaleString('id-ID')+'</td></tr>';
+    html+='<tr>'; headers.forEach(function(h){ html+='<th style="background:#f2f2f2; color:#000; border:1px solid #000; padding:6px 4px; font-weight:bold; text-align:center;">'+h+'</th>'; }); html+='</tr>';
+    var rows=srcTable.querySelectorAll("tbody tr");
+    rows.forEach(function(tr){ if(tr.style.display==="none") return; var tds=tr.querySelectorAll("td"); if(tds.length<10) return; html+='<tr>'; for(var i=0;i<10;i++){ var txt=tds[i] ? tds[i].innerText.trim() : ""; html+='<td style="border:1px solid #000; padding:4px 6px; text-align:center; color:#000; background:#fff;">'+txt+'</td>'; } html+='</tr>'; });
+    html+='</table>';
+    var template='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org"><head><meta charset="utf-8"></head><body>'+html+'</body></html>';
+    var blob=new Blob([template],{type:"application/vnd.ms-excel"});
+    var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="Log_Penyesuaian_BJ_{{ tgl_dari_val }}_sd_{{ tgl_sampai_val }}_{{ panjang_filter_val }}.xls"; a.click();
+}
+function exportPDFLogBJ(){
+    var srcTable=document.getElementById("tabelLogBJ");
+    var headers=["TGL","KAT","SAKLAR","PANJANG","ID","NAMA","INPUT","METER","EFEKTIF","ALASAN"];
+    var w=window.open('','_blank','height=800,width=1400');
+    var html=''; html+='<html><head><title>Log Penyesuaian BJ</title>'; html+='<style>@page { size: A4 landscape; margin: 10mm; } body{font-family:Arial; padding:15px; font-size:10px;} h2{text-align:center; margin:0 0 4px 0; font-size:14px;} p.sub{text-align:center; margin:0 0 12px 0; font-size:10px;} table{width:100%; border-collapse:collapse;} th{background:#f2f2f2 !important; color:#000 !important; border:1px solid #000 !important; padding:5px; font-size:9px; text-align:center;} td{border:1px solid #000 !important; padding:4px; font-size:9px; text-align:center;}</style></head><body>';
+    html+='<h2>LOG PENYESUAIAN BARANG JADI PER PANJANG GEMI SETITI</h2>'; html+='<p class="sub">PERIODE {{ tgl_dari_val }} S/D {{ tgl_sampai_val }} | FILTER: {{ panjang_filter_val }} | Dicetak: '+new Date().toLocaleString('id-ID')+'</p>';
+    html+='<table><thead><tr>'; headers.forEach(function(h){ html+='<th>'+h+'</th>'; }); html+='</tr></thead><tbody>';
+    var rows=srcTable.querySelectorAll("tbody tr"); rows.forEach(function(tr){ if(tr.style.display==="none") return; var tds=tr.querySelectorAll("td"); if(tds.length<10) return; html+='<tr>'; for(var i=0;i<10;i++){ var txt=tds[i] ? tds[i].innerText.trim() : ""; html+='<td>'+txt+'</td>'; } html+='</tr>'; });
+    html+='</tbody></table></body></html>'; w.document.write(html); w.document.close(); w.focus(); setTimeout(function(){w.print();},400);
+}
+function filterLogBJ(mode){
+    const rows = document.querySelectorAll('#tabelLogBJ tbody tr.log-row');
+    let cntManual=0, cntJual=0, cntShow=0;
+    rows.forEach(r=>{
+        const isJual = r.getAttribute('data-is-jual')==='1';
+        if(isJual) cntJual++; else cntManual++;
+        if(mode==='MANUAL'){ if(isJual){ r.style.display='none'; } else { r.style.display=''; cntShow++; } }
+        else { r.style.display=''; cntShow++; }
+    });
+    const btnManual = document.getElementById('btnFilterManual');
+    const btnSemua = document.getElementById('btnFilterSemua');
+    const info = document.getElementById('infoFilterLog');
+    if(mode==='MANUAL'){ btnManual.style.background='#22c55e'; btnManual.style.color='#000'; btnManual.style.borderColor='#22c55e'; btnSemua.style.background='#162235'; btnSemua.style.color='#94a3b8'; btnSemua.style.borderColor='#1e293b'; info.innerText = `Menampilkan ${cntShow} log manual (dari total ${cntManual+cntJual} - ${cntJual} penjualan disembunyikan)`; }
+    else { btnSemua.style.background='#22c55e'; btnSemua.style.color='#000'; btnSemua.style.borderColor='#22c55e'; btnManual.style.background='#162235'; btnManual.style.color='#94a3b8'; btnManual.style.borderColor='#1e293b'; info.innerText = `Menampilkan semua ${cntShow} log (manual ${cntManual} + penjualan ${cntJual})`; }
+    localStorage.setItem('filterLogBJ', mode);
+}
+document.addEventListener('DOMContentLoaded', function(){ const saved = localStorage.getItem('filterLogBJ') || 'MANUAL'; setTimeout(()=>filterLogBJ(saved), 300); });
+</script>
+{% endblock %}

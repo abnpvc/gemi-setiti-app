@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-halaman" style="margin-bottom: 25px; border-left: 4px solid #ff7800; padding-left: 15px;">
+    <span class="breadcrumb" style="color: #94a3b8; font-size: 12px; text-transform: uppercase;">Master Data &gt; Bahan Baku &gt;</span>
+    <h1 style="color: #ffffff; margin: 5px 0 0 0; font-size: 24px; font-weight: bold; tracking-wider;">PERBARUI DATA BAHAN BAKU</h1>
+</div>
+
+<div class="card" style="padding: 25px; background: #111827; border: 1px solid #1e293b; border-top: 4px solid #ff7800; border-radius: 8px; max-width: 600px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+    <form action="{{ url_for('edit_bahan_baku', id=data.id_bahan) }}" method="POST">
+        <label style="display: block; font-weight: bold; color: #ff7800; font-size: 11px; text-transform: uppercase;">ID Bahan Baku (Permanen)</label>
+        <input type="text" value="{{ data.id_bahan }}" disabled style="background: #0b0f19; color: #94a3b8; border: 1px solid #1e293b; width: 100%; padding: 8px; margin: 5px 0 15px; border-radius: 4px; font-size: 13px; box-sizing: border-box; font-family: monospace; font-weight: bold;">
+
+        <label style="display: block; font-weight: bold; color: #ff7800; font-size: 11px; text-transform: uppercase;">📦 Nama Bahan / Motif Curah</label>
+        <input type="text" name="nama" value="{{ data.nama_bahan }}" required style="background: #0b0f19; color: #ffffff; border: 1px solid #1e293b; width: 100%; padding: 8px; margin: 5px 0 15px; border-radius: 4px; font-size: 13px; box-sizing: border-box;" oninput="this.value = this.value.toUpperCase()">
+
+        <label style="display: block; font-weight: bold; color: #ff7800; font-size: 11px; text-transform: uppercase;">📐 Satuan Bentuk</label>
+        <input type="text" name="satuan" value="{{ data.satuan }}" required style="background: #0b0f19; color: #ffffff; border: 1px solid #1e293b; width: 100%; padding: 8px; margin: 5px 0 15px; border-radius: 4px; font-size: 13px; box-sizing: border-box;" oninput="this.value = this.value.toUpperCase()">
+
+        <label style="display: block; font-weight: bold; color: #ff7800; font-size: 11px; text-transform: uppercase;">🔢 Saldo Awal Program</label>
+        <input type="number" name="saldo_awal" value="{{ data.saldo_awal }}" step="any" required style="background: #0b0f19; color: #ffffff; border: 1px solid #1e293b; width: 100%; padding: 8px; margin: 5px 0 15px; border-radius: 4px; font-size: 13px; box-sizing: border-box;">
+
+        {% if data.kategori == "BAHAN FILM" %}
+        <label style="display: block; font-weight: bold; color: #ff7800; font-size: 11px; text-transform: uppercase;">📏 Takaran Standar / Panjang Per Rol</label>
+        <input type="text" name="takaran" value="{{ data.takaran_standar }}" style="background: #0b0f19; color: #ff7800; border: 1px solid #1e293b; width: 100%; padding: 8px; margin: 5px 0 15px; border-radius: 4px; font-size: 13px; box-sizing: border-box; font-weight: bold;" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');">
+        {% endif %}
+
+        <label style="display: block; font-weight: bold; color: #ff7800; font-size: 11px; text-transform: uppercase;">📝 Catatan Keterangan Khusus</label>
+        <textarea name="keterangan" rows="3" style="background: #0b0f19; color: #ffffff; border: 1px solid #1e293b; width: 100%; padding: 8px; margin: 5px 0 15px; border-radius: 4px; font-size: 13px; box-sizing: border-box; resize: none;" oninput="this.value = this.value.toUpperCase()">{{ data.keterangan or '' }}</textarea>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #1e293b; padding-top: 15px; margin-top: 15px;">
+            <a href="{{ url_for('daftar_bahan_baku') }}" style="background: #162235; color: #fff; border: 1px solid #ff7800; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-size: 12px; display: inline-block;">Batal</a>
+            <button type="submit" style="background: #ff7800; color: #000000; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 12px;">💾 Simpan Perubahan</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .form-container { background: #0b0f19; border: 1px solid #1e293b; border-top: 4px solid #ff7800; border-radius: 8px; padding: 25px; margin-bottom: 25px; color: #ffffff; }
+    .form-header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ff7800; padding-bottom: 12px; margin-bottom: 20px; cursor: pointer; user-select: none; }
+    .form-header-flex h2 { color: #ffffff; margin: 0; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .btn-minimize { background: #162235; color: #ff7800; border: 1px solid #ff7800; border-radius: 4px; padding: 4px 10px; cursor: pointer; font-weight: bold; }
+    .form-container label { display: block; color: #ff7800; font-weight: bold; font-size: 11px; text-transform: uppercase; margin-top: 12px; margin-bottom: 5px; letter-spacing: 0.5px; }
+    .form-container input, .form-container select, .form-container textarea { background: #111827 !important; color: #ffffff !important; border: 1px solid #1e293b !important; width: 100%; padding: 8px 12px; border-radius: 4px; font-size: 13px; box-sizing: border-box; }
+    .form-container input:focus, .form-container select:focus, .form-container textarea:focus { border-color: #ff7800 !important; box-shadow: 0 0 8px rgba(255, 120, 0, 0.4); outline: none; }
+    .kotak-item-pabrik { background: #111827; border: 1px solid #1e293b; border-left: 4px solid #ff7800; border-radius: 6px; padding: 15px; margin-bottom: 15px; position: relative; }
+    .kotak-item-pabrik h4 { margin: 0 0 10px 0; color: #ffffff; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .btn-hapus-item-baris { position: absolute; top: 12px; right: 15px; background: #7f1d1d; color: #f87171; border: 1px solid #f87171; border-radius: 4px; padding: 3px 8px; font-size: 11px; font-weight: bold; cursor: pointer; }
+    .btn-tambah-item-utama { background: #162235; color: #ffffff; border: 1px solid #ff7800; padding: 10px 18px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 13px; text-transform: uppercase; margin-top: 10px; }
+    .btn-simpan-transaksi { background: #ff7800; color: #000000; border: none; padding: 12px 25px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 13px; text-transform: uppercase; margin-top: 15px; box-shadow: 0 4px 6px rgba(255, 120, 0, 0.2); }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; color: #fff; margin-top: 5px; }
+    th { padding: 10px; border: 1px solid #1e293b; background: #162235; color: #fff; font-weight: bold; text-transform: uppercase; font-size: 11px; }
+    td { padding: 10px; border: 1px solid #1e293b; background: #0b0f19; }
+    .badge { padding:3px 8px; border-radius:4px; font-size:11px; font-weight:bold; border:1px solid; }
+    .badge-DRAFT { background:rgba(148,163,184,0.1); color:#94a3b8; border-color:#94a3b8; }
+    .badge-DIPROSES { background:rgba(250,204,21,0.1); color:#facc15; border-color:#facc15; }
+    .badge-SIAP\ KIRIM { background:rgba(96,165,250,0.1); color:#60a5fa; border-color:#60a5fa; }
+    .badge-DIKIRIM { background:rgba(52,211,153,0.1); color:#34d399; border-color:#34d399; }
+    .badge-SELESAI { background:rgba(34,197,94,0.15); color:#22c55e; border-color:#22c55e; }
+    .badge-BATAL { background:rgba(248,113,113,0.1); color:#f87171; border-color:#f87171; }
+</style>
+
+<div class="header-halaman" style="margin-bottom: 25px; border-left: 4px solid #ff7800; padding-left: 15px;">
+    <span class="breadcrumb" style="color: #94a3b8; font-size: 12px; text-transform: uppercase;">Transaksi Gudang &gt;</span>
+    <h1 style="color: #ffffff; margin: 5px 0 0 0; font-size: 24px; font-weight: bold; letter-spacing: 0.5px;">PESANAN BARANG JADI OLEH PELANGGAN</h1>
+    <p style="color: #64748b; margin: 2px 0 0 0; font-size: 13px;">Manajemen Order Plafon & Lis PVC - Auto Potong Stok Saat Dikirim</p>
+</div>
+
+<!-- FORM INPUT PESANAN BARU -->
+<div class="form-container" id="kotakFormLengkap">
+    <div class="form-header-flex" onclick="toggleFormLipat()">
+        <h2>🛒 INPUT PESANAN BARU - {{ preview_no }}</h2>
+        <button type="button" class="btn-minimize" id="panahMinimize">▼</button>
+    </div>
+
+    <div id="isiFormMeliat" style="max-height: 0px; overflow: hidden; transition: max-height 0.4s ease-out;">
+        <div style="padding: 20px; border: 1px solid #1e293b; border-top: none; border-radius: 0 0 6px 6px;">
+            <form action="{{ url_for('tambah_pesanan_barang_jadi') }}" method="POST" id="formPesanan">
+                <div style="display:flex; gap:20px; flex-wrap:wrap; background:#162235; padding:15px; border-radius:6px; border:1px solid #1e293b; margin-bottom:15px;">
+                    <div style="flex:1; min-width:180px;">
+                        <label>📅 Tgl Pesan</label>
+                        <input type="date" name="tanggal_pesan" required value="{{ tanggal_hari_ini }}">
+                    </div>
+                    <div style="flex:1; min-width:180px;">
+                        <label>🚚 Rencana Kirim</label>
+                        <input type="date" name="tanggal_kirim_rencana">
+                    </div>
+                    <div style="flex:2; min-width:220px;">
+                        <label>👥 Pelanggan *</label>
+                        <select name="id_pelanggan" required>
+                            <option value="">-- Pilih Pelanggan --</option>
+                            {% for pl in pelanggan_list %}
+                            <option value="{{ pl.id_pelanggan }}">{{ pl.kode_singkat }} - {{ pl.nama_pelanggan }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if not pelanggan_list %}
+                        <small style="color:#f87171;">⚠️ Belum ada pelanggan! <a href="{{ url_for('daftar_pelanggan') }}" style="color:#facc15;">Tambah dulu di Master Pelanggan</a></small>
+                        {% endif %}
+                    </div>
+                    <div style="flex:1; min-width:150px;">
+                        <label>Status Awal</label>
+                        <select name="status">
+                            <option value="DRAFT">DRAFT</option>
+                            <option value="DIPROSES">DIPROSES</option>
+                            <option value="SIAP KIRIM">SIAP KIRIM</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <label style="margin:0; font-size:13px; color:#fff;">📦 DAFTAR ITEM BARANG JADI YANG DIPESAN</label>
+                    <button type="button" class="btn-tambah-item-utama" onclick="tambahBarisItem()">➕ Tambah Item</button>
+                </div>
+
+                <div id="wadahItems">
+                    <!-- BARIS ITEM AKAN DIINJECT JS -->
+                </div>
+
+                <div style="background:#111827; border:1px dashed #ff7800; padding:12px; border-radius:6px; margin-top:15px;">
+                    <label>📝 Keterangan Pesanan Umum</label>
+                    <textarea name="keterangan" rows="2" placeholder="Ex: CUSTOMER MINTA KIRIM JAM 9 PAGI, VIA COLT DIESEL..." oninput="this.value=this.value.toUpperCase()"></textarea>
+                </div>
+
+                <button type="submit" class="btn-simpan-transaksi">💾 SIMPAN PESANAN ({{ preview_no }})</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- TABEL LIST PESANAN -->
+<div class="card" style="padding: 20px; background: #0b0f19; border-top: 4px solid #ff7800; border-radius: 8px; color: #fff; border: 1px solid #1e293b;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+        <h3 style="margin:0; color:#ff7800; font-size:14px;">📋 DAFTAR PESANAN ({{ pesanan_list|length }} ORDER)</h3>
+        <div style="display:flex; gap:8px;">
+            <select id="filterStatus" onchange="filterPesanan()" style="background:#111827; color:#fff; border:1px solid #1e293b; padding:6px 10px; border-radius:4px; font-size:12px;">
+                <option value="ALL">SEMUA STATUS</option>
+                <option value="DRAFT">DRAFT</option>
+                <option value="DIPROSES">DIPROSES</option>
+                <option value="SIAP KIRIM">SIAP KIRIM</option>
+                <option value="DIKIRIM">DIKIRIM</option>
+                <option value="SELESAI">SELESAI</option>
+                <option value="BATAL">BATAL</option>
+            </select>
+            <input type="text" id="inputCariPesanan" onkeyup="filterPesanan()" placeholder="🔍 Cari No / Pelanggan..." style="background:#111827; border:1px solid #1e293b; color:#fff; padding:6px 10px; border-radius:4px; width:200px;">
+        </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+        <table id="tabelPesanan">
+            <thead>
+                <tr>
+                    <th>No Pesanan</th>
+                    <th>Tgl Pesan</th>
+                    <th style="text-align:left; padding-left:15px;">Pelanggan</th>
+                    <th>Rencana Kirim</th>
+                    <th>Item</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ps in pesanan_list %}
+                <tr>
+                    <td style="font-family:monospace; font-weight:900; color:#facc15;">{{ ps.no_pesanan }}</td>
+                    <td>{{ ps.tanggal_pesan.strftime('%d-%m-%Y') if ps.tanggal_pesan else '-' }}</td>
+                    <td style="text-align:left; padding-left:15px;">
+                        <div style="font-weight:bold;">{{ ps.pelanggan.nama_pelanggan if ps.pelanggan else ps.id_pelanggan }}</div>
+                        <div style="font-size:10px; color:#94a3b8;">{{ ps.pelanggan.kode_singkat if ps.pelanggan else '' }} {% if ps.keterangan %}| {{ ps.keterangan[:30] }}{% endif %}</div>
+                    </td>
+                    <td>{{ ps.tanggal_kirim_rencana.strftime('%d-%m-%Y') if ps.tanggal_kirim_rencana else '-' }}</td>
+                    <td><span style="background:#162235; border:1px solid #ff7800; color:#ff7800; padding:2px 8px; border-radius:10px; font-weight:bold;">{{ ps.total_item }} item</span></td>
+                    <td><span class="badge badge-{{ ps.status }}">{{ ps.status }}</span></td>
+                    <td>
+                        <div style="display:flex; gap:4px; justify-content:center;">
+                            <a href="{{ url_for('detail_pesanan_barang_jadi', id_pesanan=ps.id_pesanan) }}" style="background:#162235; color:#60a5fa; border:1px solid #60a5fa; padding:4px 8px; border-radius:4px; font-size:11px; text-decoration:none; font-weight:bold;">👁️ DETAIL</a>
+                            <form action="{{ url_for('hapus_pesanan_barang_jadi', id_pesanan=ps.id_pesanan) }}" method="POST" onsubmit="return confirm('Hapus pesanan {{ ps.no_pesanan }}? Jika sudah DIKIRIM, stok akan dikembalikan.')" style="display:inline;">
+                                <button type="submit" style="background:#7f1d1d; color:#f87171; border:1px solid #f87171; padding:4px 6px; border-radius:4px; font-size:11px; cursor:pointer;">🗑️</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" style="padding:30px; color:#64748b; font-style:italic;">📭 Belum ada pesanan. Buat pesanan pertama di atas.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- TEMPLATE BARIS ITEM (HIDDEN) -->
+<div id="templateItem" style="display:none;">
+    <div class="kotak-item-pabrik item-row">
+        <button type="button" class="btn-hapus-item-baris" onclick="hapusBaris(this)">✖️ HAPUS</button>
+        <h4>🛒 ITEM BARANG JADI</h4>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <div style="flex:2; min-width:220px;">
+                <label>Barang Jadi *</label>
+                <select name="id_barang_jadi[]" required onchange="cekStok(this)">
+                    <option value="">-- Pilih Barang Jadi --</option>
+                    {% for bj in barang_list %}
+                    <option value="{{ bj.id_barang_jadi }}" data-stok="{{ bj.stok_akhir }}" data-nama="{{ bj.nama_barang }}" data-kategori="{{ bj.kategori }}">{{ bj.id_barang_jadi }} - {{ bj.nama_barang }} (Stok: {{ bj.stok_akhir }})</option>
+                    {% endfor %}
+                </select>
+                <small class="info-stok" style="color:#94a3b8; font-size:11px; display:block; margin-top:3px;">Pilih barang untuk lihat stok</small>
+            </div>
+            <div style="flex:0.6; min-width:90px;">
+                <label>Panjang (M)</label>
+                <select name="panjang[]">
+                    <option value="3">3 M</option>
+                    <option value="4" selected>4 M (STD)</option>
+                    <option value="5">5 M</option>
+                    <option value="6">6 M</option>
+                    <option value="3.5">3.5 M</option>
+                    <option value="2.7">2.7 M</option>
+                    <option value="99">REQUEST</option>
+                </select>
+            </div>
+            <div style="flex:0.6; min-width:100px;">
+                <label>Qty Pesan *</label>
+                <input type="number" name="jumlah[]" min="1" step="1" required placeholder="0" oninput="validasiQty(this)">
+            </div>
+            <div style="flex:1; min-width:140px;">
+                <label>Keterangan Item</label>
+                <input type="text" name="keterangan_item[]" placeholder="Warna / Motif..." oninput="this.value=this.value.toUpperCase()">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // TOGGLE FORM
+    function toggleFormLipat(){
+        var isi = document.getElementById("isiFormMeliat");
+        var panah = document.getElementById("panahMinimize");
+        if(isi.style.maxHeight==="0px" || isi.style.maxHeight===""){
+            isi.style.maxHeight = isi.scrollHeight+800+"px";
+            panah.innerText="▲";
+        } else {
+            isi.style.maxHeight="0px";
+            panah.innerText="▼";
+        }
+    }
+    // Auto buka form saat load pertama
+    window.addEventListener('load', function(){ toggleFormLipat(); tambahBarisItem(); });
+
+    // MANAJEMEN ITEM DINAMIS
+    function tambahBarisItem(){
+        var tmpl = document.getElementById("templateItem").innerHTML;
+        var wadah = document.getElementById("wadahItems");
+        var div = document.createElement("div");
+        div.innerHTML = tmpl;
+        wadah.appendChild(div.firstElementChild);
+        // refresh height
+        var isi=document.getElementById("isiFormMeliat");
+        if(isi.style.maxHeight && isi.style.maxHeight!=="0px"){ isi.style.maxHeight = (isi.scrollHeight+200)+"px"; }
+    }
+    function hapusBaris(btn){
+        var row = btn.closest(".item-row");
+        if(document.querySelectorAll(".item-row").length<=1){ alert("Minimal 1 item harus ada!"); return; }
+        row.remove();
+    }
+    function cekStok(selectEl){
+        var opt = selectEl.options[selectEl.selectedIndex];
+        var info = selectEl.closest(".item-row").querySelector(".info-stok");
+        if(opt && opt.value){
+            var stok = opt.getAttribute("data-stok");
+            var kategori = opt.getAttribute("data-kategori");
+            info.innerHTML = "Stok tersedia: <b style='color:#34d399;'>"+stok+"</b> LBR | Kategori: "+kategori;
+            if(parseFloat(stok)<=5){ info.innerHTML += " <span style='color:#f87171;'>⚠️ TIPIS!</span>"; }
+        } else {
+            info.innerText="Pilih barang untuk lihat stok";
+        }
+    }
+    function validasiQty(input){
+        if(input.value && parseInt(input.value) <1){ input.value=1; }
+    }
+
+    // FILTER TABEL
+    function filterPesanan(){
+        var statusFilter = document.getElementById("filterStatus").value;
+        var search = document.getElementById("inputCariPesanan").value.toUpperCase();
+        var table = document.getElementById("tabelPesanan");
+        var tr = table.getElementsByTagName("tr");
+        for(var i=1;i<tr.length;i++){
+            var tds = tr[i].getElementsByTagName("td");
+            if(tds.length<6) continue;
+            var no = tds[0].innerText.toUpperCase();
+            var pelanggan = tds[2].innerText.toUpperCase();
+            var status = tds[5].innerText.toUpperCase();
+            var matchSearch = no.indexOf(search)>-1 || pelanggan.indexOf(search)>-1;
+            var matchStatus = statusFilter==="ALL" || status.indexOf(statusFilter)>-1;
+            tr[i].style.display = (matchSearch && matchStatus) ? "" : "none";
+        }
+    }
+</script>
+{% endblock %}

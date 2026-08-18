@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .card-dark { background:#111827; border:1px solid #1e293b; border-top:4px solid #ff7800; border-radius:8px; padding:25px; color:#fff; max-width:700px; }
+    label { display:block; margin-top:12px; font-weight:bold; color:#ff7800; font-size:11px; text-transform:uppercase; }
+    input, select, textarea { background:#0b0f19 !important; color:#fff !important; border:1px solid #1e293b; width:100%; padding:9px; margin:5px 0 10px; border-radius:4px; font-size:13px; box-sizing:border-box; }
+    input:focus, select:focus, textarea:focus { border-color:#ff7800 !important; outline:none; box-shadow:0 0 8px rgba(255,120,0,0.4); }
+    .btn-simpan { background:#ff7800; color:#000; border:none; padding:10px 20px; border-radius:6px; font-weight:bold; cursor:pointer; }
+    .btn-batal { background:#162235; color:#fff; border:1px solid #ff7800; padding:10px 20px; border-radius:6px; text-decoration:none; display:inline-block; }
+    .grid-saldo { display:grid; grid-template-columns: repeat(5,1fr); gap:8px; background:rgba(255,120,0,0.08); border:1px dashed #ff7800; padding:10px; border-radius:6px; }
+    .grid-saldo small { font-size:10px; display:block; margin-bottom:3px; }
+</style>
+<div class="header-halaman" style="margin-bottom:20px; border-left:4px solid #ff7800; padding-left:15px;">
+    <span style="color:#94a3b8; font-size:12px;">Master Data > Barang Jadi ></span>
+    <h2 style="color:#fff; margin:5px 0 0 0;">EDIT BARANG JADI - {{ data.id_barang_jadi }}</h2>
+    <p style="color:#64748b; font-size:12px;">Audit per panjang 3M/4M/5M/6M/REQUEST</p>
+</div>
+<div class="card-dark">
+    {% set saldo_map = {} %}
+    {% for sp in data.saldo_per_panjang %}
+        {% set _ = saldo_map.__setitem__(sp.panjang, sp.saldo_awal) %}
+    {% endfor %}
+    <form method="POST">
+        <label>ID Barang Jadi</label>
+        <input type="text" value="{{ data.id_barang_jadi }}" readonly style="color:#94a3b8 !important; font-family:monospace;">
+        <label>Nama Barang</label>
+        <input type="text" name="nama" value="{{ data.nama_barang }}" required oninput="this.value=this.value.toUpperCase()">
+        <label>Kategori</label>
+        <select name="kategori" disabled>
+            <option value="PLAFON" {{ 'selected' if data.kategori=='PLAFON' else '' }}>PLAFON</option>
+            <option value="LIS" {{ 'selected' if data.kategori=='LIS' else '' }}>LIS</option>
+        </select>
+        <small style="color:#64748b; font-size:10px;">Kategori tidak bisa diubah</small>
+        <label>Tipe Film</label>
+        <input type="text" name="tipe_film" value="{{ data.tipe_film or '' }}" oninput="this.value=this.value.toUpperCase()">
+        <label>Satuan</label>
+        <input type="text" name="satuan" value="{{ data.satuan }}" required oninput="this.value=this.value.toUpperCase()">
+        <label style="margin-top:20px; color:#22c55e;">📦 SALDO AWAL PER PANJANG (AUDIT)</label>
+        <div class="grid-saldo">
+            <div><small style="color:#22c55e;">3 M</small><input type="number" name="saldo_3" min="0" step="1" value="{{ saldo_map.get('3',0)|int }}"></div>
+            <div><small style="color:#facc15; font-weight:bold;">4 M</small><input type="number" name="saldo_4" min="0" step="1" value="{{ saldo_map.get('4', data.saldo_awal)|int }}" style="border:2px solid #facc15 !important;"></div>
+            <div><small style="color:#60a5fa;">5 M</small><input type="number" name="saldo_5" min="0" step="1" value="{{ saldo_map.get('5',0)|int }}"></div>
+            <div><small style="color:#a78bfa;">6 M</small><input type="number" name="saldo_6" min="0" step="1" value="{{ saldo_map.get('6',0)|int }}"></div>
+            <div><small style="color:#f87171;">REQUEST</small><input type="number" name="saldo_request" min="0" step="1" value="{{ saldo_map.get('REQUEST',0)|int }}"></div>
+        </div>
+        <small style="color:#64748b; font-size:10px; display:block; margin-top:6px;">Total saldo lama: {{ data.saldo_awal }} | Stok akhir sistem: {{ data.stok_akhir }}</small>
+        <label style="margin-top:15px;">Rumus Produksi</label>
+        <textarea name="rumus" rows="2" oninput="this.value=this.value.toUpperCase()">{{ data.rumus_produksi or '' }}</textarea>
+        <label>Keterangan</label>
+        <textarea name="keterangan" rows="2" oninput="this.value=this.value.toUpperCase()">{{ data.keterangan or '' }}</textarea>
+        <div style="margin-top:20px; display:flex; gap:10px;">
+            <button type="submit" class="btn-simpan">💾 Simpan Perubahan + Audit Panjang</button>
+            <a href="{{ url_for('daftar_barang_jadi') }}" class="btn-batal">↩️ Kembali</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

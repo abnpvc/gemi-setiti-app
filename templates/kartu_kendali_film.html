@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .tabel-kendali { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; color: #fff; }
+    .tabel-kendali th { padding: 12px 8px; border: 1px solid #1f2937; background: #162235; color: #ff7800; font-weight: 900; text-transform: uppercase; font-size: 11px; position: sticky; top:0; z-index:5; }
+    .tabel-kendali td { padding: 10px 8px; border: 1px solid #1f2937; background: #0b0f19; font-weight: 700; font-size: 11.5px; }
+    .badge-tersedia { background: rgba(52,211,153,0.15); color:#34d399; border:1px solid #34d399; padding:3px 8px; border-radius:4px; font-size:10px; font-weight:900; }
+    .badge-terpakai { background: rgba(248,113,113,0.15); color:#f87171; border:1px solid #f87171; padding:3px 8px; border-radius:4px; font-size:10px; font-weight:900; }
+</style>
+
+<div class="header-halaman" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-left:4px solid #ff7800; padding-left:15px;">
+    <div>
+        <h1 style="color:#fff; margin:4px 0 0 0; font-size:20px; font-weight:900;">📜 KARTU KENDALI FILM - ROL AKTIF TERSEDIA</h1>
+        <div style="font-size:11px; color:#94a3b8; font-weight:700; margin-top:4px;">Total {{ rol_list|length }} rol film aktif di rak gudang | Status: TERSEDIA</div>
+    </div>
+    <div style="display:flex; gap:8px;">
+        <input type="text" id="inputCariRol" onkeyup="cariRol()" placeholder="🔍 Cari Kode / Bahan..." style="background:#0b0f19; color:#fff; border:1px solid #1e293b; padding:8px 12px; border-radius:5px; width:250px; font-size:12px;">
+        <button onclick="exportExcelRol()" style="background:#fff; color:#000; border:1px solid #000; padding:0 12px; height:32px; border-radius:5px; font-size:11px; font-weight:bold; cursor:pointer;">📊 EXCEL</button>
+    </div>
+</div>
+
+<div class="card" style="padding:0; background:#0b0f19; border-top:4px solid #ff7800; border-radius:8px; border:1px solid #1e293b; overflow:hidden;">
+    <div style="padding:12px 16px; background:#162235; border-bottom:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center;">
+        <div style="font-size:12px; color:#fff; font-weight:900; text-transform:uppercase;">📋 DAFTAR ROL FILM TERSEDIA</div>
+        <div style="font-size:11px; color:#94a3b8;">{{ rol_list|length }} rol</div>
+    </div>
+    <div style="max-height:80vh; overflow:auto;">
+        <table class="tabel-kendali" id="tabelKendaliFilm">
+            <thead>
+                <tr>
+                    <th style="width:35px;">NO</th>
+                    <th style="width:140px; color:#facc15;">KODE TELUSUR</th>
+                    <th style="text-align:left; min-width:180px;">NAMA BAHAN</th>
+                    <th style="width:80px;">ID BAHAN</th>
+                    <th style="width:90px;">PANJANG AWAL</th>
+                    <th style="width:90px; color:#34d399;">SISA</th>
+                    <th style="width:80px;">STATUS</th>
+                    <th style="width:110px;">TGL DATANG</th>
+                    <th style="width:120px;">OPERATOR</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rol in rol_list %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td style="font-family:monospace; font-weight:900; color:#facc15; background:#1a1a0a;">{{ rol.id_kode_telusur }}</td>
+                    <td style="text-align:left; font-weight:900;">{{ rol.bahan.nama_bahan if rol.bahan else '-' }}</td>
+                    <td>{{ rol.id_bahan }}</td>
+                    <td>{{ rol.panjang_awal }} M</td>
+                    <td style="background:rgba(52,211,153,0.08); color:#34d399; font-weight:900;">{{ rol.panjang_sisa }} M</td>
+                    <td><span class="badge-tersedia">{{ rol.status_rol }}</span></td>
+                    <td>{{ rol.tanggal_datang.strftime('%d-%m-%Y') if rol.tanggal_datang else '-' }}</td>
+                    <td style="font-size:10px; color:#94a3b8;">{{ rol.operator_terakhir or '-' }}</td>
+                </tr>
+                {% endfor %}
+                {% if not rol_list %}
+                <tr><td colspan="9" style="padding:30px; color:#64748b; font-style:italic;">Tidak ada rol film dengan status TERSEDIA</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function cariRol(){
+    var input=document.getElementById("inputCariRol"); var filter=input.value.toUpperCase();
+    var table=document.getElementById("tabelKendaliFilm"); var tr=table.getElementsByTagName("tr");
+    for(var i=1;i<tr.length;i++){ var txt=tr[i].innerText.toUpperCase(); tr[i].style.display= txt.indexOf(filter)>-1 ? "" : "none"; }
+}
+function exportExcelRol(){
+    var table=document.getElementById("tabelKendaliFilm");
+    var html='<table border=1><tr><td colspan=9>KARTU KENDALI FILM - ROL AKTIF</td></tr><tr><th>NO</th><th>KODE TELUSUR</th><th>NAMA BAHAN</th><th>ID BAHAN</th><th>PANJANG AWAL</th><th>SISA</th><th>STATUS</th><th>TGL DATANG</th><th>OPERATOR</th></tr>';
+    var rows=table.querySelectorAll("tbody tr"); rows.forEach(function(tr){ if(tr.style.display==="none") return; var tds=tr.querySelectorAll("td"); if(tds.length<9) return; html+='<tr>'; for(var j=0;j<9;j++){ html+='<td>'+tds[j].innerText.trim()+'</td>'; } html+='</tr>'; });
+    html+='</table>';
+    var blob=new Blob(['<html><head><meta charset=utf-8></head><body>'+html+'</body></html>'],{type:"application/vnd.ms-excel"}); var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="Kartu_Kendali_Film.xls"; a.click();
+}
+</script>
+{% endblock %}

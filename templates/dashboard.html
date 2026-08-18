@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* GRID UTAMA UNTUK KARTU STATISTIK */
+    .grid-dashboard {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    /* STYLE KARTU MEWAH (LUXURY CARD) */
+    .kartu-stat {
+        background: #111827;
+        border: 1px solid #1e293b;
+        border-top: 4px solid #ff7800;
+        border-radius: 8px;
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        transition: transform 0.2s, box-shadow 0.2s;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .kartu-stat:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 0 20px rgba(255, 120, 0, 0.2);
+    }
+    
+    .konten-kartu-atas {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .stat-info label {
+        display: block;
+        color: #94a3b8;
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 6px;
+    }
+    
+    .stat-info .angka {
+        color: #ffffff;
+        font-size: 26px;
+        font-weight: 900;
+        font-family: 'Courier New', monospace;
+    }
+
+    .stat-info .satuan-teks {
+        font-size: 13px;
+        color: #94a3b8;
+        font-weight: normal;
+        font-family: 'Segoe UI', sans-serif;
+    }
+    
+    .stat-icon {
+        font-size: 36px;
+        opacity: 0.25;
+        color: #ff7800;
+    }
+
+    .btn-pintas-db {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        background: rgba(255, 120, 0, 0.08);
+        color: #ff7800;
+        border: 1px solid rgba(255, 120, 0, 0.4);
+        padding: 8px 12px;
+        border-radius: 5px;
+        font-size: 11px;
+        font-weight: bold;
+        text-decoration: none;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.2s ease;
+        margin-top: 5px;
+    }
+
+    .btn-pintas-db:hover {
+        background: #ff7800;
+        color: #000000;
+        box-shadow: 0 0 10px rgba(255, 120, 0, 0.3);
+    }
+    
+    /* PANEL RADAR STOK KRITIS */
+    .panel-tabel {
+        background: #111827;
+        border: 1px solid #1e293b;
+        border-top: 4px solid #f87171;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    }
+    
+    .tabel-responsive {
+        overflow-x: auto;
+        border-radius: 6px;
+        border: 1px solid #1e293b;
+    }
+    
+    .tabel-gudang {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        text-align: center;
+        color: #fff;
+    }
+    
+    .tabel-gudang th {
+        background: #162235;
+        color: #ffffff;
+        font-weight: 900;
+        text-transform: uppercase;
+        border-bottom: 2px solid #f87171;
+        padding: 12px 10px;
+        border: 1px solid #1e293b;
+    }
+    
+    .tabel-gudang td {
+        padding: 12px 10px;
+        border: 1px solid #1e293b;
+        background: #0b0f19;
+    }
+    
+    .badge-status {
+        background: rgba(248, 113, 113, 0.1);
+        color: #f87171;
+        padding: 4px 10px;
+        border: 1px solid #f87171;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: bold;
+    }
+    
+    .badge-aman {
+        background: rgba(52, 211, 153, 0.1);
+        color: #34d399;
+        padding: 4px 10px;
+        border: 1px solid #34d399;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: bold;
+    }
+</style>
+
+<!-- HEADER UTAMA DASHBOARD -->
+<div class="header-halaman" style="margin-bottom: 25px; border-left: 4px solid #ff7800; padding-left: 15px;">
+    <span class="breadcrumb" style="color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Aplikasi Utama &gt;</span>
+    <h1 style="color: #ffffff; margin: 4px 0 0 0; font-size: 24px; font-weight: bold; tracking-wider; letter-spacing: 0.5px;">RINGKASAN LOGISTIK GUDANG</h1>
+    <p style="color: #64748b; margin: 2px 0 0 0; font-size: 13px;">Radar Pusat Pemantauan Manunggal Komponen Manufaktur PVC Gemi Setiti</p>
+</div>
+
+<div class="grid-dashboard">
+    <!-- 1. KARTU SUPPLIER -->
+    <div class="kartu-stat">
+        <div class="konten-kartu-atas">
+            <div class="stat-info">
+                <label>Total Mitra Pemasok</label>
+                <div class="angka">{{ total_supplier }} <span class="satuan-teks">Perusahaan</span></div>
+            </div>
+            <div class="stat-icon">🚚</div>
+        </div>
+        <a href="{{ url_for('daftar_supplier') }}" class="btn-pintas-db">📂 Buka Database Supplier &rarr;</a>
+    </div>
+
+    <!-- 2. KARTU BAHAN BAKU -->
+    <div class="kartu-stat">
+        <div class="konten-kartu-atas">
+            <div class="stat-info">
+                <label>Jenis Bahan Baku (Hulu)</label>
+                <div class="angka">{{ total_bahan }} <span class="satuan-teks">Item Material</span></div>
+            </div>
+            <div class="stat-icon">📦</div>
+        </div>
+        <a href="{{ url_for('daftar_bahan_baku') }}" class="btn-pintas-db">📂 Buka Database Bahan Baku &rarr;</a>
+    </div>
+
+    <!-- 3. KARTU BARANG JADI -->
+    <div class="kartu-stat">
+        <div class="konten-kartu-atas">
+            <div class="stat-info">
+                <label>Master SKU Produk Jadi</label>
+                <div class="angka">{{ total_barang }} <span class="satuan-teks">Variasi Model</span></div>
+            </div>
+            <div class="stat-icon">🏭</div>
+        </div>
+        <a href="{{ url_for('daftar_barang_jadi') }}" class="btn-pintas-db">📂 Buka Database Barang Jadi &rarr;</a>
+    </div>
+
+    <!-- 4. KARTU PELANGGAN BARU -->
+    <div class="kartu-stat" style="border-top-color:#facc15;">
+        <div class="konten-kartu-atas">
+            <div class="stat-info">
+                <label>Mitra Pelanggan</label>
+                <div class="angka">{{ total_pelanggan|default(0) }} <span class="satuan-teks">Customer</span></div>
+            </div>
+            <div class="stat-icon" style="color:#facc15;">👥</div>
+        </div>
+        <a href="{{ url_for('daftar_pelanggan') }}" class="btn-pintas-db" style="border-color:#facc15; color:#facc15;">👥 Buka Database Pelanggan &rarr;</a>
+    </div>
+
+    <!-- 5. KARTU PESANAN BARU -->
+    <div class="kartu-stat" style="border-top-color:#22c55e;">
+        <div class="konten-kartu-atas">
+            <div class="stat-info">
+                <label>Pesanan Barang Jadi</label>
+                <div class="angka">{{ total_pesanan|default(0) }} <span class="satuan-teks">Order ({{ pesanan_pending|default(0) }} Pending)</span></div>
+            </div>
+            <div class="stat-icon" style="color:#22c55e;">🛒</div>
+        </div>
+        <a href="{{ url_for('transaksi_pesanan_barang_jadi') }}" class="btn-pintas-db" style="border-color:#22c55e; color:#22c55e;">🛒 Buka Pesanan Pelanggan &rarr;</a>
+    </div>
+
+    <!-- 6. KARTU PENGIRIMAN / SURAT JALAN - BARU -->
+    <div class="kartu-stat" style="border-top-color:#60a5fa;">
+        <div class="konten-kartu-atas">
+            <div class="stat-info">
+                <label>Surat Jalan Pengiriman</label>
+                <div class="angka">{{ total_pengiriman|default(0) }} <span class="satuan-teks">SJ ({{ pengiriman_pending|default(0) }} Jalan)</span></div>
+            </div>
+            <div class="stat-icon" style="color:#60a5fa;">🚚</div>
+        </div>
+        <a href="{{ url_for('transaksi_pengiriman') }}" class="btn-pintas-db" style="border-color:#60a5fa; color:#60a5fa;">🚚 Buka Pengiriman - Ketik PO &rarr;</a>
+    </div>
+</div>
+
+<div class="panel-tabel">
+    <!-- FILTER KATEGORI CERDAS & TOMBOL EKSPOR DOKUMEN -->
+    <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
+        <h3>⚠️ AMBANG BATAS KRITIS: STOK BAHAN BAKU PALING MENIPIS</h3>
+        
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <select id="filterKategoriRadar" onchange="eksekusiFilterRadarCerdas()" style="background: #0b0f19; color: #ffffff; border: 1px solid #1e293b; padding: 7px 12px; border-radius: 5px; font-size: 12px; font-weight: bold; outline: none; height: 32px;">
+                <option value="ALL">🔍 SEMUA KATEGORI (ALL)</option>
+                <option value="BAHAN BAKU">BB - BAHAN BAKU INDUK</option>
+                <option value="BAHAN FILM">BF - BAHAN FILM PVC</option>
+                <option value="BAHAN PENOLONG">BP - BAHAN PENOLONG</option>
+            </select>
+            
+            <button onclick="unduhDokumenRadar('pdf')" style="background: #7f1d1d; color: #f87171; border: 1px solid #f87171; padding: 0 12px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; height: 32px;">📄 PDF</button>
+            <button onclick="unduhDokumenRadar('excel')" style="background: #064e3b; color: #34d399; border: 1px solid #34d399; padding: 0 12px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; height: 32px;">📊 EXCEL</button>
+        </div>
+    </div>
+    <div class="tabel-responsive">
+        <table class="tabel-gudang" id="tabelRadarDashboard">
+            <thead>
+                <tr>
+                    <th style="color: #ff7800; width: 120px;">ID Bahan</th>
+                    <th style="text-align: left; padding-left: 15px;">Nama Komponen Material</th>
+                    <th style="width: 150px;">Kategori Kelompok</th>
+                    <th style="width: 140px; color: #34d399;">Volume Akhir</th>
+                    <th style="width: 100px;">Satuan</th>
+                    <th style="width: 160px;">Kelayakan Sistem</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if stok_menipis %}
+                    {% for b in stok_menipis %}
+                    <tr onmouseover="this.style.background='#162235'" onmouseout="this.style.background='#0b0f19'">
+                        <td style="font-family: 'Courier New', monospace; font-weight: 900; color: #facc15; font-size: 13px;">{{ b.id_bahan }}</td>
+                        <td style="text-align: left; padding-left: 15px; font-weight: bold; color: #f8fafc;">{{ b.nama_bahan }}</td>
+                        <td style="font-weight: bold;">{{ b.kategori }}</td>
+                        <td style="font-weight: bold; font-family: monospace; font-size: 14px; {% if b.stok_akhir <= b.takaran_standar %}color: #f87171;{% else %}color: #34d399;{% endif %}">
+                            {{ b.stok_akhir }}
+                        </td>
+                        <td style="color: #cbd5e1; font-weight: 500;">{{ b.satuan }}</td>
+                        <td>
+                            {% if b.stok_akhir <= b.takaran_standar %}
+                                <span class="badge-status">⚠️ WAJIB RE-ORDER</span>
+                            {% else %}
+                                <span class="badge-aman">✓ STOK AMAN</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" style="padding: 45px; color: #64748b; font-style: italic; background: #0b0f19;">📭 Belum terdeteksi adanya pergerakan data komponen material di server hulu.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // FUNGSI ENGINE FILTER KATEGORI INSTAN
+    function eksekusiFilterRadarCerdas() {
+        var pilihan, tabel, tr, td, i, teksKategori;
+        pilihan = document.getElementById("filterKategoriRadar").value;
+        tabel = document.getElementById("tabelRadarDashboard");
+        if (!tabel) return;
+        
+        tr = tabel.getElementsByTagName("tr");
+        for (i = 1; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[2]; // Kolom Kategori Kelompok
+            if (td) {
+                teksKategori = (td.textContent || td.innerText).trim().toUpperCase();
+                if (pilihan === "ALL" || teksKategori === pilihan) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+
+    // FUNGSI ENGINE EKSPOR DOKUMEN AMAN (CLIENT-SIDE)
+    function unduhDokumenRadar(tipe) {
+        var tabel = document.getElementById("tabelRadarDashboard");
+        if (!tabel) return;
+
+        var baris = tabel.querySelectorAll("tr");
+        var isiTeks = "LAPORAN RADAR AMBANG BATAS KRITIS STOK\n\n";
+        
+        // Membaca data baris demi baris yang aktif/tidak tersembunyi oleh filter
+        baris.forEach(function(row) {
+            if (row.style.display !== "none") {
+                var kolom = row.querySelectorAll("th, td");
+                var dataBaris = [];
+                kolom.forEach(function(col, indeks) {
+                    // Jangan ambil kolom kelayakan sistem agar data bersih
+                    if (indeks < 5) {
+                        dataBaris.push(col.innerText.trim());
+                    }
+                });
+                isiTeks += dataBaris.join("\t") + "\n";
+            }
+        });
+
+        if (tipe === 'excel') {
+            // Pembuatan file spreadsheet murni (.xls data tabulasi)
+            var blob = new Blob([isiTeks], { type: "application/vnd.ms-excel;charset=utf-8" });
+            var link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "Radar_Stok_Kritis_GemiSetiti.xls";
+            link.click();
+        } else if (tipe === 'pdf') {
+            // Cetak jendela dokumen cetak print bawaan browser ke mode PDF
+            var dokumenCetak = window.open('', '_blank');
+            dokumenCetak.document.write('<html><head><title>Cetak Laporan</title>');
+            dokumenCetak.document.write('<style>body{font-family:sans-serif;padding:20px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;text-align:center;}</style></head><body>');
+            dokumenCetak.document.write('<h2>LAPORAN AMBANG BATAS KRITIS STOK GUDANG GEMI SETITI</h2>');
+            dokumenCetak.document.write('<table style="border:1px solid black;">' + tabel.innerHTML + '</table>');
+            dokumenCetak.document.write('</body></html>');
+            dokumenCetak.document.close();
+            dokumenCetak.print();
+        }
+    }
+</script>
+{% endblock %}
